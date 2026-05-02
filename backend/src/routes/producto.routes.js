@@ -4,7 +4,7 @@ import { authMiddleware, roleGuard } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
-// GET /api/productos - todos (publico para clientes ver catalogo)
+// GET /api/productos 
 router.get('/', async (req, res) => {
   try {
     const productos = await repo.getAll();
