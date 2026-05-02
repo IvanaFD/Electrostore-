@@ -1,0 +1,86 @@
+services:
+  db:
+    image: postgres:16-alpine
+    networks:
+      - electrostore_net
+    environment:
+      POSTGRES_USER: proy2
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: electrostore
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U proy2 -d electrostore"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  db-init:
+    image: postgres:16-alpine
+    networks:
+      - electrostore_net
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./database:/sql
+    environment:
+      PGPASSWORD: secret
+    command: >
+      sh -c "
+      psql -h db -U proy2 -d electrostore -v ON_ERROR_STOP=1 -c 'DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;' &&
+      psql -h db -U proy2 -d electrostore -v ON_ERROR_STOP=1 -f /sql/01-ddl.sql &&
+      psql -h db -U proy2 -d electrostore -v ON_ERROR_STOP=1 -f /sql/02-seed.sql
+      "
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    networks:
+      - electrostore_net
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=proy2
+      - DB_PASSWORD=secret
+      - DB_NAME=electrostore
+      - JWT_SECRET=electrostore_jwt_secret_2026_proy2
+      - PORT=3000
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    command: sh -c "npm install && npm run dev"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    networks:
+      - electrostore_net
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:3000
+    depends_on:
+      - backend
+    command: sh -c "npm install && npm run dev"
+
+networks:
+  electrostore_net:
+    driver: bridge
+
+volumes:
+  pgdata:

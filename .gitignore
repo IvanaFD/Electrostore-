@@ -47,6 +47,3 @@ vite.config.js.timestamp-*
 
 # Coverage / tests
 coverage/
-
-# Docker
-docker-compose.yml
