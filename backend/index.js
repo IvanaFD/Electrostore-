@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
 import authRoutes from './src/routes/auth.routes.js';
+import productoRoutes from './src/routes/producto.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,6 +15,7 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/productos', productoRoutes);
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
