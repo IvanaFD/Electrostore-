@@ -1,9 +1,3 @@
--- ============================================================
--- ElectroStore - Tienda de Componentes Electrónicos
--- DDL - Definición de tablas e índices
--- Base de datos: PostgreSQL
-
-
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE Categoria (
@@ -47,7 +41,7 @@ CREATE TABLE Cliente (
     email      VARCHAR(100) NOT NULL UNIQUE,
     telefono   VARCHAR(20)  NOT NULL,
     direccion  TEXT         NOT NULL,
-    id_usuario INTEGER      NOT NULL UNIQUE REFERENCES Usuario(id_usuario),
+    id_usuario INTEGER      UNIQUE REFERENCES Usuario(id_usuario),
     created_at TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
@@ -101,18 +95,7 @@ CREATE TABLE DetalleOrden (
     PRIMARY KEY (id_orden, id_producto)
 );
 
-------------------------------------------------------
--- ÍNDICES
-
-
--- Búsqueda de producto por SKU al registrar ventas
-CREATE INDEX idx_producto_sku      ON Producto(sku);
-
--- Buscador en tiempo real por nombre de producto
-CREATE INDEX idx_producto_nombre   ON Producto(nombre);
-
--- Filtro por fecha en reportes de ventas
-CREATE INDEX idx_venta_fecha       ON Venta(fecha_venta);
-
--- Búsqueda de cliente por teléfono al registrar venta
-CREATE INDEX idx_cliente_telefono  ON Cliente(telefono);
+CREATE INDEX idx_producto_sku     ON Producto(sku);
+CREATE INDEX idx_producto_nombre  ON Producto(nombre);
+CREATE INDEX idx_venta_fecha      ON Venta(fecha_venta);
+CREATE INDEX idx_cliente_telefono ON Cliente(telefono);
