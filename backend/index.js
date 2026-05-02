@@ -4,6 +4,7 @@ import 'dotenv/config';
 import authRoutes from './src/routes/auth.routes.js';
 import productoRoutes from './src/routes/producto.routes.js';
 import clienteRoutes from './src/routes/cliente.routes.js';
+import VentaRoutes from './src/routes/venta.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -18,6 +19,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/productos', productoRoutes);
 app.use('/api/clientes', clienteRoutes);
+app.use('/api/ventas', VentaRoutes);
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
