@@ -15,7 +15,19 @@ const routes = [
   { path: '/registro', component: () => import('../views/auth/RegistroView.vue') },
 
   // Admin/vendedor (los haremos después)
-  { path: '/admin', component: () => import('../views/admin/DashboardView.vue'), meta: { requiresAuth: true, rol: 'staff' } },
+  { 
+  path: '/admin',
+  component: () => import('../views/admin/AdminLayout.vue'),
+  meta: { requiresAuth: true, rol: 'staff' },
+  children: [
+    { path: '', component: () => import('../views/admin/DashboardView.vue') },
+    { path: 'inventario', component: () => import('../views/admin/InventarioView.vue') },
+    { path: 'ventas', component: () => import('../views/admin/VentasAdminView.vue') },
+    { path: 'ordenes', component: () => import('../views/admin/OrdenesAdminView.vue') },
+    { path: 'empleados', component: () => import('../views/admin/EmpleadosAdminView.vue') },
+    { path: 'perfil', component: () => import('../views/admin/PerfilAdminView.vue') },
+  ]
+}
 ]
 
 const router = createRouter({
