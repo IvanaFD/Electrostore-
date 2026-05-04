@@ -51,6 +51,7 @@ INSERT INTO Proveedor (nombre, nombre_contacto, telefono, email, direccion) VALU
 ('TechWorld GT',                  'Lorena Aguilar',   '7890-1236', 'lorena@techworldgt.com',       'Villa Nueva, Guatemala');
 
 INSERT INTO Empleado (nombre, apellido, email, telefono, cargo, id_usuario) VALUES
+('Administrador', 'ElectroStore', 'admin@electrostore.com', '5555-0000', 'supervisor', 1),
 ('Pedro',     'Martinez',  'pedro@electrostore.com',       '5555-7777', 'vendedor',   2),
 ('Laura',     'Gomez',     'laura@electrostore.com',       '5555-8888', 'vendedor',   3),
 ('Miguel',    'Soto',      'miguel.s@electrostore.com',    '5555-8001', 'vendedor',   NULL),
