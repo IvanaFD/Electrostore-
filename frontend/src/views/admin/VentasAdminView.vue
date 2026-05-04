@@ -8,6 +8,15 @@
       <button class="btn btn-primary" @click="abrirModalNueva">+ Nueva Venta</button>
     </div>
 
+    <ConfirmModal
+      :show="confirm.show"
+      :titulo="confirm.titulo"
+      :mensaje="confirm.mensaje"
+      :textoConfirmar="confirm.textoConfirmar"
+      :tipo="confirm.tipo"
+      @confirmar="ejecutarConfirm"
+      @cancelar="confirm.show = false"
+    />
     <!-- Filtros -->
     <div class="filtros-bar">
       <input v-model="filtroFechaInicio" type="date" class="form-control" />
@@ -157,7 +166,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import api from '../../services/api'
-import { Eye, X, UserPlus } from 'lucide-vue-next'
+import ConfirmModal from '../../components/ConfirmModal.vue'
+import { Eye, X } from 'lucide-vue-next'
 
 const ventas = ref([])
 const clientes = ref([])
@@ -169,11 +179,20 @@ const showDetalle = ref(false)
 const showNueva = ref(false)
 const loadingNueva = ref(false)
 const errorNueva = ref('')
-
 const filtroFechaInicio = ref('')
 const filtroFechaFin = ref('')
 const filtroEstado = ref('')
 
+const confirm = ref({ show: false, titulo: '', mensaje: '', textoConfirmar: '', tipo: 'danger', accion: null })
+
+const mostrarConfirm = (titulo, mensaje, textoConfirmar, tipo, accion) => {
+  confirm.value = { show: true, titulo, mensaje, textoConfirmar, tipo, accion }
+}
+
+const ejecutarConfirm = async () => {
+  confirm.value.show = false
+  await confirm.value.accion()
+}
 const nuevaVenta = ref({ id_cliente: '', id_empleado: '', items: [{ id_producto: '', cantidad: 1 }] })
 
 const ventasFiltradas = computed(() => {
@@ -196,13 +215,20 @@ const verDetalle = async (v) => {
 }
 
 const cancelar = async (v) => {
-  if (!confirm(`¿Cancelar venta #${v.id_venta}?`)) return
-  try {
-    await api.patch(`/api/ventas/${v.id_venta}/cancelar`)
-    await cargar()
-  } catch (err) {
-    alert(err.response?.data?.error || 'Error al cancelar')
-  }
+  mostrarConfirm(
+    'Cancelar venta',
+    `¿Cancelar venta #${v.id_venta}? El stock será devuelto automáticamente.`,
+    'Cancelar venta',
+    'danger',
+    async () => {
+      try {
+        await api.patch(`/api/ventas/${v.id_venta}/cancelar`)
+        await cargar()
+      } catch (err) {
+        mostrarConfirm('Error', err.response?.data?.error || 'Error al cancelar', 'Entendido', 'warning', () => {})
+      }
+    }
+  )
 }
 
 const abrirModalNueva = () => {
