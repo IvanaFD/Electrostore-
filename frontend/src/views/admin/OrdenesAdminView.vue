@@ -3,12 +3,33 @@
     <div class="page-header">
       <div>
         <h1>Órdenes de Compra</h1>
-        <p>{{ ordenes.length }} órdenes</p>
+        <p>{{ ordenesFiltradas.length }} órdenes</p>
       </div>
       <button class="btn btn-primary" @click="abrirModalNueva">+ Nueva Orden</button>
     </div>
 
-    <!-- Tabla -->
+    <ConfirmModal
+      :show="confirm.show"
+      :titulo="confirm.titulo"
+      :mensaje="confirm.mensaje"
+      :textoConfirmar="confirm.textoConfirmar"
+      :tipo="confirm.tipo"
+      @confirmar="ejecutarConfirm"
+      @cancelar="confirm.show = false"
+    />
+
+    <div class="filtros-bar">
+      <input v-model="filtroInicio" type="date" class="form-control" />
+      <span>a</span>
+      <input v-model="filtroFin" type="date" class="form-control" />
+      <select v-model="filtroEstado" class="form-control">
+        <option value="">Todos los estados</option>
+        <option value="pendiente">Pendiente</option>
+        <option value="recibida">Recibida</option>
+      </select>
+      <button class="btn btn-outline" @click="limpiarFiltros">Limpiar</button>
+    </div>
+
     <div class="card">
       <table class="data-table">
         <thead>
@@ -22,7 +43,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="o in ordenes" :key="o.id_orden">
+          <tr v-for="o in ordenesFiltradas" :key="o.id_orden">
             <td>{{ o.id_orden }}</td>
             <td>{{ formatDate(o.fecha_orden) }}</td>
             <td>{{ o.proveedor }}</td>
@@ -35,6 +56,9 @@
                 </button>
                 <button v-if="o.estado === 'pendiente'" class="btn-icon success" @click="recibir(o)" title="Marcar recibida">
                   <Check :size="15" />
+                </button>
+                <button v-if="o.estado === 'pendiente'" class="btn-icon danger" @click="cancelar(o)" title="Cancelar orden">
+                  <X :size="15" />
                 </button>
               </div>
             </td>
@@ -132,9 +156,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import api from '../../services/api'
+import { ref, computed, onMounted } from 'vue'
 import { Eye, Check, X } from 'lucide-vue-next'
+import ConfirmModal from '../../components/ConfirmModal.vue'
+import api from '../../services/api'
 
 const ordenes = ref([])
 const proveedores = ref([])
@@ -147,8 +172,32 @@ const showNueva = ref(false)
 const loadingNueva = ref(false)
 const errorNueva = ref('')
 const nuevaOrden = ref({ id_proveedor: '', id_empleado: '', items: [{ id_producto: '', cantidad: 1, precio_compra: '' }] })
+const filtroInicio = ref('')
+const filtroFin = ref('')
+const filtroEstado = ref('')
+
+const confirm = ref({ show: false, titulo: '', mensaje: '', textoConfirmar: '', tipo: 'danger', accion: null })
+
+const mostrarConfirm = (titulo, mensaje, textoConfirmar, tipo, accion) => {
+  confirm.value = { show: true, titulo, mensaje, textoConfirmar, tipo, accion }
+}
+
+const ejecutarConfirm = async () => {
+  confirm.value.show = false
+  await confirm.value.accion()
+}
 
 const formatDate = (f) => new Date(f).toLocaleDateString('es-GT', { day: '2-digit', month: '2-digit', year: 'numeric' })
+
+const ordenesFiltradas = computed(() => {
+  let list = ordenes.value
+  if (filtroEstado.value) list = list.filter(o => o.estado === filtroEstado.value)
+  if (filtroInicio.value) list = list.filter(o => new Date(o.fecha_orden) >= new Date(filtroInicio.value))
+  if (filtroFin.value) list = list.filter(o => new Date(o.fecha_orden) <= new Date(filtroFin.value + 'T23:59:59'))
+  return list
+})
+
+const limpiarFiltros = () => { filtroInicio.value = ''; filtroFin.value = ''; filtroEstado.value = '' }
 
 const verDetalle = async (o) => {
   ordenSeleccionada.value = o
@@ -158,13 +207,37 @@ const verDetalle = async (o) => {
 }
 
 const recibir = async (o) => {
-  if (!confirm(`¿Marcar orden #${o.id_orden} como recibida? Esto aumentará el stock.`)) return
-  try {
-    await api.patch(`/api/ordenes/${o.id_orden}/recibir`)
-    await cargar()
-  } catch (err) {
-    alert(err.response?.data?.error || 'Error')
-  }
+  mostrarConfirm(
+    'Recibir orden',
+    `¿Marcar orden #${o.id_orden} como recibida? Esto aumentará el stock de los productos.`,
+    'Recibir',
+    'success',
+    async () => {
+      try {
+        await api.patch(`/api/ordenes/${o.id_orden}/recibir`)
+        await cargar()
+      } catch (err) {
+        mostrarConfirm('Error', err.response?.data?.error || 'Error al recibir', 'Entendido', 'warning', () => {})
+      }
+    }
+  )
+}
+
+const cancelar = async (o) => {
+  mostrarConfirm(
+    'Cancelar orden',
+    `¿Cancelar orden #${o.id_orden}? Esta acción no se puede deshacer.`,
+    'Cancelar orden',
+    'danger',
+    async () => {
+      try {
+        await api.delete(`/api/ordenes/${o.id_orden}`)
+        await cargar()
+      } catch (err) {
+        mostrarConfirm('Error', err.response?.data?.error || 'Error al cancelar', 'Entendido', 'warning', () => {})
+      }
+    }
+  )
 }
 
 const abrirModalNueva = () => {
@@ -215,6 +288,9 @@ onMounted(cargar)
 .page-header h1 { font-size: 28px; margin-bottom: 4px; }
 .page-header p { color: var(--text-light); font-size: 14px; }
 
+.filtros-bar { display: flex; gap: 12px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
+.filtros-bar .form-control { width: 160px; }
+
 .card { background: var(--white); border-radius: var(--radius); border: 1.5px solid var(--border); overflow: hidden; }
 
 .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -228,11 +304,11 @@ onMounted(cargar)
 .estado-badge.recibida { background: #d4f0dc; color: #1a7f37; }
 
 .acciones { display: flex; gap: 6px; }
-.btn-icon { background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: 6px; font-size: 14px; transition: background 0.15s; }
-.btn-icon:hover { background: var(--gray); }
-.btn-icon.danger:hover { background: #fde8e8; }
+.btn-icon { background: none; border: none; cursor: pointer; padding: 6px; border-radius: 6px; color: var(--text-light); display: flex; align-items: center; transition: all 0.15s; }
+.btn-icon:hover { background: var(--gray); color: var(--text); }
 .btn-icon.success { color: #1a7f37; }
 .btn-icon.success:hover { background: #d4f0dc; }
+.btn-icon.danger:hover { background: #fde8e8; color: #cf3131; }
 
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
 .modal { background: var(--white); border-radius: var(--radius); width: 100%; max-width: 620px; max-height: 90vh; overflow-y: auto; }
