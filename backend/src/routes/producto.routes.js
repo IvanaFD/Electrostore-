@@ -67,13 +67,16 @@ router.put('/:id', authMiddleware, roleGuard('admin', 'vendedor'), async (req, r
 // DELETE /api/productos/:id
 router.delete('/:id', authMiddleware, roleGuard('admin'), async (req, res) => {
   try {
-    const producto = await repo.remove(req.params.id);
-    if (!producto) return res.status(404).json({ error: 'Producto no encontrado' });
-    res.json({ message: 'Producto eliminado correctamente' });
+    const producto = await repo.remove(req.params.id)
+    if (!producto) return res.status(404).json({ error: 'Producto no encontrado' })
+    res.json({ message: 'Producto eliminado correctamente' })
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al eliminar producto' });
+    if (err.code === '23503') {
+      return res.status(409).json({ error: 'No se puede eliminar, el producto tiene ventas u órdenes asociadas' })
+    }
+    console.error(err)
+    res.status(500).json({ error: 'Error al eliminar producto' })
   }
-});
+})
 
 export default router;
