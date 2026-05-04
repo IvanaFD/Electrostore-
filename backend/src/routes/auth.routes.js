@@ -1,7 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { findUserByUsername, findUserById } from '../repositories/auth.repository.js';
+import { findUserByUsername, findUserById, createUser,createCliente } from '../repositories/auth.repository.js';
 import { authMiddleware } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
@@ -44,6 +44,21 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ error: 'Error al iniciar sesión' });
   }
 });
+
+// POST /api/auth/register
+router.post('/register', async (req, res) => {
+  try {
+    const { username, password, nombre, apellido, email, telefono, direccion } = req.body
+    const hash = await bcrypt.hash(password, 10)
+    const user = await createUser(username, hash, 'cliente')
+    await createCliente(nombre, apellido, email, telefono, direccion, user.id_usuario)
+    res.status(201).json(user)
+  } catch (err) {
+    if (err.code === '23505') return res.status(409).json({ error: 'El username o email ya existe' })
+    console.error(err)
+    res.status(500).json({ error: 'Error al registrar usuario' })
+  }
+})
 
 // GET /api/auth/me
 router.get('/me', authMiddleware, async (req, res) => {
