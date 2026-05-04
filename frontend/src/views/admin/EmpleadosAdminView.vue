@@ -8,6 +8,16 @@
       <button class="btn btn-primary" @click="abrirModal()">+ Nuevo Empleado</button>
     </div>
 
+    <ConfirmModal
+      :show="confirm.show"
+      :titulo="confirm.titulo"
+      :mensaje="confirm.mensaje"
+      :textoConfirmar="confirm.textoConfirmar"
+      :tipo="confirm.tipo"
+      @confirmar="ejecutarConfirm"
+      @cancelar="confirm.show = false"
+    />
+
     <div class="card">
       <table class="data-table">
         <thead>
@@ -34,8 +44,15 @@
             </td>
             <td>
               <div class="acciones">
-                <button class="btn-icon" @click="abrirModal(e)" title="Editar">✏️</button>
-                <button class="btn-icon danger" @click="eliminar(e)" title="Eliminar">🗑️</button>
+                <button class="btn-icon" @click="verEmpleado(e)" title="Ver">
+                  <Eye :size="15" />
+                </button>
+                <button class="btn-icon" @click="abrirModal(e)" title="Editar">
+                  <Pencil :size="15" />
+                </button>
+                <button class="btn-icon danger" @click="eliminar(e)" title="Eliminar">
+                  <Trash2 :size="15" />
+                </button>
               </div>
             </td>
           </tr>
@@ -43,7 +60,47 @@
       </table>
     </div>
 
-    <!-- Modal -->
+    <!-- Modal Ver -->
+    <div v-if="showVer" class="modal-overlay" @click.self="showVer = false">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>{{ empleadoVer?.nombre }} {{ empleadoVer?.apellido }}</h3>
+          <button @click="showVer = false">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nombre</label>
+              <input :value="empleadoVer?.nombre" class="form-control" disabled />
+            </div>
+            <div class="form-group">
+              <label>Apellido</label>
+              <input :value="empleadoVer?.apellido" class="form-control" disabled />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input :value="empleadoVer?.email" class="form-control" disabled />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Teléfono</label>
+              <input :value="empleadoVer?.telefono" class="form-control" disabled />
+            </div>
+            <div class="form-group">
+              <label>Cargo</label>
+              <input :value="empleadoVer?.cargo" class="form-control" disabled />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Usuario del sistema</label>
+            <input :value="empleadoVer?.username || 'Sin acceso al sistema'" class="form-control" disabled />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Crear/Editar -->
     <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
       <div class="modal">
         <div class="modal-header">
@@ -94,15 +151,35 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { Eye, Pencil, Trash2 } from 'lucide-vue-next'
+import ConfirmModal from '../../components/ConfirmModal.vue'
 import api from '../../services/api'
 
 const empleados = ref([])
 const showModal = ref(false)
+const showVer = ref(false)
 const editando = ref(null)
 const loading = ref(false)
 const error = ref('')
+const empleadoVer = ref(null)
+
+const confirm = ref({ show: false, titulo: '', mensaje: '', textoConfirmar: '', tipo: 'danger', accion: null })
+
+const mostrarConfirm = (titulo, mensaje, textoConfirmar, tipo, accion) => {
+  confirm.value = { show: true, titulo, mensaje, textoConfirmar, tipo, accion }
+}
+
+const ejecutarConfirm = async () => {
+  confirm.value.show = false
+  await confirm.value.accion()
+}
 
 const form = ref({ nombre: '', apellido: '', email: '', telefono: '', cargo: 'vendedor' })
+
+const verEmpleado = (e) => {
+  empleadoVer.value = e
+  showVer.value = true
+}
 
 const abrirModal = (e = null) => {
   error.value = ''
@@ -134,14 +211,27 @@ const guardar = async () => {
   }
 }
 
-const eliminar = async (e) => {
-  if (!confirm(`¿Eliminar a ${e.nombre} ${e.apellido}?`)) return
-  try {
-    await api.delete(`/api/empleados/${e.id_empleado}`)
-    await cargar()
-  } catch (err) {
-    alert(err.response?.data?.error || 'Error al eliminar')
-  }
+const eliminar = (e) => {
+  mostrarConfirm(
+    'Eliminar empleado',
+    `¿Eliminar a ${e.nombre} ${e.apellido}? Esta acción no se puede deshacer.`,
+    'Eliminar',
+    'danger',
+    async () => {
+      try {
+        await api.delete(`/api/empleados/${e.id_empleado}`)
+        await cargar()
+      } catch (err) {
+        mostrarConfirm(
+          'No se puede eliminar',
+          err.response?.data?.error || 'Error al eliminar',
+          'Entendido',
+          'warning',
+          () => {}
+        )
+      }
+    }
+  )
 }
 
 const cargar = async () => {
@@ -175,12 +265,12 @@ onMounted(cargar)
 .sin-usuario { font-size: 12px; color: var(--text-light); }
 
 .acciones { display: flex; gap: 6px; }
-.btn-icon { background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: 6px; font-size: 14px; transition: background 0.15s; }
-.btn-icon:hover { background: var(--gray); }
-.btn-icon.danger:hover { background: #fde8e8; }
+.btn-icon { background: none; border: none; cursor: pointer; padding: 6px; border-radius: 6px; color: var(--text-light); display: flex; align-items: center; transition: all 0.15s; }
+.btn-icon:hover { background: var(--gray); color: var(--text); }
+.btn-icon.danger:hover { background: #fde8e8; color: #cf3131; }
 
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-.modal { background: var(--white); border-radius: var(--radius); width: 100%; max-width: 500px; }
+.modal { background: var(--white); border-radius: var(--radius); width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
 .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1.5px solid var(--border); }
 .modal-header h3 { font-size: 18px; }
 .modal-header button { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-light); }
