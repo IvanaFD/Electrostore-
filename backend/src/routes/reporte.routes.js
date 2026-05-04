@@ -88,4 +88,49 @@ router.get('/ventas-por-empleado', authMiddleware, roleGuard('admin', 'vendedor'
   }
 });
 
+// GET /api/reportes/ exportar-csv?tipo =
+router.get('/exportar-csv', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res) => {
+  try {
+    const tipo = req.query.tipo || 'productos-mas-vendidos'
+    let data = []
+    let headers = []
+
+    if (tipo === 'productos-mas-vendidos') {
+      data = await repo.getProductosMasVendidos()
+      headers = ['id_producto', 'nombre', 'sku', 'marca', 'categoria', 'total_vendido', 'total_ingresos']
+    } else if (tipo === 'ventas-por-categoria') {
+      data = await repo.getVentasPorCategoria()
+      headers = ['categoria', 'total_ventas', 'unidades_vendidas', 'total_ingresos']
+    } else if (tipo === 'clientes-con-compras') {
+      data = await repo.getClientesConCompras()
+      headers = ['id_cliente', 'nombre', 'apellido', 'email', 'telefono', 'total_compras', 'total_gastado']
+    } else if (tipo === 'stock-bajo') {
+      data = await repo.getStockBajo()
+      headers = ['id_producto', 'sku', 'nombre', 'marca', 'stock_actual', 'stock_minimo', 'categoria']
+    } else if (tipo === 'ventas-por-empleado') {
+      data = await repo.getVentasPorEmpleado()
+      headers = ['id_empleado', 'empleado', 'cargo', 'total_ventas', 'total_ingresos']
+    } else if (tipo === 'productos-sin-ventas') {
+      data = await repo.getProductosSinVentas()
+      headers = ['sku', 'nombre', 'marca', 'stock_actual', 'categoria']
+    } else if (tipo === 'ventas-por-periodo') {
+      const { fecha_inicio, fecha_fin } = req.query
+      data = await repo.getVentasPorPeriodo(fecha_inicio, fecha_fin)
+      headers = ['id_venta', 'fecha_venta', 'cliente', 'empleado', 'total', 'estado']
+    }
+
+    const csv = [
+      headers.join(','),
+      ...data.map(row => headers.map(h => `"${row[h] ?? ''}"`).join(','))
+    ].join('\n')
+
+    res.setHeader('Content-Type', 'text/csv')
+    res.setHeader('Content-Disposition', `attachment; filename="${tipo}.csv"`)
+    res.send('\uFEFF' + csv)  
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Error al exportar' })
+  }
+})
+
 export default router;
