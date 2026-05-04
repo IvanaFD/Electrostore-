@@ -86,9 +86,12 @@ const handleLogout = () => {
 }
 
 .logo-icon {
-  width: 36px; height: 36px; background: var(--teal);
-  border-radius: 8px; display: flex; align-items: center;
-  justify-content: center; overflow: hidden;
+  width: 36px; 
+  height: 36px; 
+  display: flex; 
+  align-items: center;
+  justify-content: center; 
+  overflow: hidden;
 }
 .logo-icon img { width: 100%; height: 100%; object-fit: contain; }
 

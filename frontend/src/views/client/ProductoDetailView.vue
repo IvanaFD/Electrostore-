@@ -80,6 +80,12 @@
         <div class="skeleton-detail" />
       </div>
     </div>
+
+    <footer class="footer">
+      <div class="container">
+        <p>© 2026 ElectroStore </p>
+      </div>
+    </footer>
   </div>
 </template>
 
@@ -371,5 +377,11 @@ onMounted(async () => {
   .detail-layout { grid-template-columns: 1fr; gap: 32px; }
   .detail-img-wrap { position: static; }
   .detail-nombre { font-size: 24px; }
+}
+
+.footer {
+  background: var(--dark); border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 24px 0; text-align: center;
+  color: rgba(255,255,255,0.4); font-size: 13px;
 }
 </style>

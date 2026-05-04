@@ -5,7 +5,7 @@
       <div class="container navbar-inner">
         <!-- Logo -->
         <router-link to="/" class="logo">
-          <div class="logo-icon" size ="22">
+          <div class="logo-icon">
             <img src="/logo.png" alt="Logo" />
           </div>
           <span class="logo-text">ElectroStore</span>
@@ -194,10 +194,8 @@ const seleccionarSugerencia = (p) => {
 }
 
 .logo-icon {
-  width: 40px;
-  height: 40px;
-  background: var(--teal);
-  border-radius: 10px;
+  width: 100px;
+  height: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -213,8 +211,8 @@ const seleccionarSugerencia = (p) => {
 }
 
 .logo-icon img {
-  width: 100%;
-  height: 100%;
+  width: 10rem;
+  height: 10rem;
   object-fit: contain;
   border-radius: 10px;
 }

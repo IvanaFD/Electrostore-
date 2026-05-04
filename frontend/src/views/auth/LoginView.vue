@@ -118,14 +118,12 @@ const handleLogin = async () => {
 }
 
 .logo-icon {
-  width: 44px;
-  height: 44px;
-  background: var(--teal);
-  border-radius: 12px;
+  width: 100px;
+  height: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: 20px;
 }
 
 .logo-text {

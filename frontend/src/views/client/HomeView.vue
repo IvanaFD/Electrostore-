@@ -91,7 +91,7 @@
     <!-- Footer simple -->
     <footer class="footer">
       <div class="container">
-        <p>© 2026 ElectroStore · Todos los derechos reservados</p>
+        <p>© 2026 ElectroStore </p>
       </div>
     </footer>
   </div>

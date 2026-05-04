@@ -82,6 +82,12 @@
         </div>
       </div>
     </main>
+
+    <footer class="footer">
+      <div class="container">
+        <p>© 2026 ElectroStore </p>
+      </div>
+    </footer>
   </div>
 </template>
 
@@ -243,5 +249,11 @@ onMounted(async () => {
   .perfil-layout { grid-template-columns: 1fr; }
   .perfil-sidebar { position: static; }
   .datos-grid { grid-template-columns: 1fr; }
+}
+
+.footer {
+  background: var(--dark); border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 24px 0; text-align: center;
+  color: rgba(255,255,255,0.4); font-size: 13px;
 }
 </style>
