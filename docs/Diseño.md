@@ -25,7 +25,7 @@ El diagrama fue elaborado en notación Chen. Las entidades se representan con re
 
 ### 1.2 Diagrama
 
-![Diagrama Entidad-Relación](docs/diagrama_er.png)
+![Diagrama Entidad-Relación](diagrama_er.png)
 
 ---
 
@@ -69,7 +69,7 @@ PK compuesta: (id_orden, id_producto)
 
 ### 2.2 Diagrama del Modelo Relacional
 
-![Modelo Relacional](docs/modelo_relacional.png)
+![Modelo Relacional](modelo_relacional.png)
 
 ---
 
