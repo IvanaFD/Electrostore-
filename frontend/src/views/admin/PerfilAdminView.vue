@@ -31,28 +31,9 @@
         <p v-else class="sin-datos">Este usuario no tiene empleado vinculado</p>
       </div>
 
-      <div class="card">
-        <h2>Cambiar Contraseña</h2>
-        <form @submit.prevent="cambiarPassword" class="password-form">
-          <div class="form-group">
-            <label>Contraseña actual</label>
-            <input v-model="passwordForm.actual" type="password" class="form-control" required />
-          </div>
-          <div class="form-group">
-            <label>Nueva contraseña</label>
-            <input v-model="passwordForm.nueva" type="password" class="form-control" required />
-          </div>
-          <div class="form-group">
-            <label>Confirmar contraseña</label>
-            <input v-model="passwordForm.confirmar" type="password" class="form-control" required />
-          </div>
-          <p v-if="errorPass" class="error-msg">{{ errorPass }}</p>
-          <p v-if="successPass" class="success-msg">{{ successPass }}</p>
-          <button type="submit" class="btn btn-primary" :disabled="loadingPass">
-            {{ loadingPass ? 'Actualizando...' : 'Actualizar Contraseña' }}
-          </button>
-        </form>
-      </div>
+      
+
+      
     </div>
   </div>
 </template>
@@ -64,36 +45,10 @@ import api from '../../services/api'
 
 const auth = useAuthStore()
 const empleado = ref(null)
-const loadingPass = ref(false)
-const errorPass = ref('')
-const successPass = ref('')
 
-const passwordForm = ref({ actual: '', nueva: '', confirmar: '' })
 
 const iniciales = computed(() => auth.user?.username?.slice(0, 2).toUpperCase() || 'AD')
 
-const cambiarPassword = async () => {
-  errorPass.value = ''
-  successPass.value = ''
-  if (passwordForm.value.nueva !== passwordForm.value.confirmar) {
-    errorPass.value = 'Las contraseñas no coinciden'
-    return
-  }
-  loadingPass.value = true
-  try {
-    // Verificar con login que la contraseña actual es correcta
-    await api.post('/api/auth/login', {
-      username: auth.user.username,
-      password: passwordForm.value.actual
-    })
-    successPass.value = 'Contraseña actualizada correctamente'
-    passwordForm.value = { actual: '', nueva: '', confirmar: '' }
-  } catch {
-    errorPass.value = 'La contraseña actual es incorrecta'
-  } finally {
-    loadingPass.value = false
-  }
-}
 
 onMounted(async () => {
   try {
@@ -108,8 +63,7 @@ onMounted(async () => {
 .page-header { margin-bottom: 28px; }
 .page-header h1 { font-size: 28px; }
 
-.perfil-layout { display: grid; grid-template-columns: 300px 1fr; gap: 24px; align-items: start; }
-
+.perfil-layout { display: grid; grid-template-columns: 1fr; max-width: 400px; gap: 24px; }
 .card { background: var(--white); border-radius: var(--radius); border: 1.5px solid var(--border); padding: 28px; }
 
 .perfil-card { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
