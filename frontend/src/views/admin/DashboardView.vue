@@ -5,7 +5,6 @@
       <p>Resumen general de ElectroStore</p>
     </div>
 
-    <!-- Stats -->
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-icon teal"><Package :size="22" /></div>
@@ -38,9 +37,13 @@
     </div>
 
     <div class="dashboard-grid">
-      <!-- Productos mas vendidos GROUP BY + HAVING -->
       <div class="card">
-        <h2>Productos Más Vendidos </h2>
+        <div class="card-header-row">
+          <h2>Productos Más Vendidos</h2>
+          <button class="btn-export" @click="exportarCSV('productos-mas-vendidos')">
+            <Download :size="13" /> CSV
+          </button>
+        </div>
         <table class="data-table">
           <thead>
             <tr>
@@ -61,9 +64,13 @@
         </table>
       </div>
 
-      <!-- Stock bajo VIEW -->
       <div class="card">
-        <h2>Stock Bajo </h2>
+        <div class="card-header-row">
+          <h2>Stock Bajo</h2>
+          <button class="btn-export" @click="exportarCSV('stock-bajo')">
+            <Download :size="13" /> CSV
+          </button>
+        </div>
         <table class="data-table">
           <thead>
             <tr>
@@ -74,7 +81,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="p in stockBajo.slice(0,5)" :key="p.id_producto" class="row-alert">
+            <tr v-for="p in stockBajo.slice(0,5)" :key="p.id_producto">
               <td>{{ p.sku }}</td>
               <td>{{ p.nombre }}</td>
               <td class="text-red">{{ p.stock_actual }}</td>
@@ -84,9 +91,13 @@
         </table>
       </div>
 
-      <!-- Ventas por categoria GROUP BY -->
       <div class="card">
-        <h2>Ventas por Categoría </h2>
+        <div class="card-header-row">
+          <h2>Ventas por Categoría</h2>
+          <button class="btn-export" @click="exportarCSV('ventas-por-categoria')">
+            <Download :size="13" /> CSV
+          </button>
+        </div>
         <table class="data-table">
           <thead>
             <tr>
@@ -107,9 +118,13 @@
         </table>
       </div>
 
-      <!-- Clientes con compras SUBQUERY IN -->
       <div class="card">
-        <h2>Mejores Clientes </h2>
+        <div class="card-header-row">
+          <h2>Mejores Clientes</h2>
+          <button class="btn-export" @click="exportarCSV('clientes-con-compras')">
+            <Download :size="13" /> CSV
+          </button>
+        </div>
         <table class="data-table">
           <thead>
             <tr>
@@ -128,9 +143,13 @@
         </table>
       </div>
 
-      <!-- Productos sin ventas SUBQUERY EXISTS -->
       <div class="card">
-        <h2>Productos Sin Ventas </h2>
+        <div class="card-header-row">
+          <h2>Productos Sin Ventas</h2>
+          <button class="btn-export" @click="exportarCSV('productos-sin-ventas')">
+            <Download :size="13" /> CSV
+          </button>
+        </div>
         <table class="data-table">
           <thead>
             <tr>
@@ -151,9 +170,13 @@
         </table>
       </div>
 
-      <!-- Ventas por empleado GROUP BY -->
       <div class="card">
-        <h2>Ventas por Empleado </h2>
+        <div class="card-header-row">
+          <h2>Ventas por Empleado</h2>
+          <button class="btn-export" @click="exportarCSV('ventas-por-empleado')">
+            <Download :size="13" /> CSV
+          </button>
+        </div>
         <table class="data-table">
           <thead>
             <tr>
@@ -174,48 +197,14 @@
         </table>
       </div>
 
-      <!-- Ventas por periodo CTE -->
-      <div class="card full-width">
-        <div class="card-header-row">
-          <h2>Ventas por Período </h2>
-          <div class="filtros">
-            <input v-model="fechaInicio" type="date" class="form-control date-input" />
-            <span>a</span>
-            <input v-model="fechaFin" type="date" class="form-control date-input" />
-            <button class="btn btn-teal" @click="cargarVentasPeriodo">Filtrar</button>
-          </div>
-        </div>
-        <table class="data-table" v-if="ventasPeriodo.length">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Fecha</th>
-              <th>Cliente</th>
-              <th>Empleado</th>
-              <th>Total</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="v in ventasPeriodo" :key="v.id_venta">
-              <td>{{ v.id_venta }}</td>
-              <td>{{ formatDate(v.fecha_venta) }}</td>
-              <td>{{ v.cliente }}</td>
-              <td>{{ v.empleado || 'Sin empleado' }}</td>
-              <td>Q{{ parseFloat(v.total).toFixed(2) }}</td>
-              <td><span class="estado-badge" :class="v.estado">{{ v.estado }}</span></td>
-            </tr>
-          </tbody>
-        </table>
-        <p v-else class="empty-msg">Selecciona un período para ver las ventas</p>
-      </div>
+      
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { Package, ShoppingCart, Users, AlertTriangle } from 'lucide-vue-next'
+import { Package, ShoppingCart, Users, AlertTriangle, Download } from 'lucide-vue-next'
 import api from '../../services/api'
 
 const stats = ref({ productos: 0, ventas: 0, clientes: 0 })
@@ -225,19 +214,29 @@ const ventasPorCategoria = ref([])
 const clientesConCompras = ref([])
 const productosSinVentas = ref([])
 const ventasPorEmpleado = ref([])
-const ventasPeriodo = ref([])
-const fechaInicio = ref('')
-const fechaFin = ref('')
 
 const formatDate = (f) => new Date(f).toLocaleDateString('es-GT', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
-const cargarVentasPeriodo = async () => {
-  if (!fechaInicio.value || !fechaFin.value) return
+const exportarCSV = async (tipo) => {
   try {
-    const { data } = await api.get(`/api/reportes/ventas-por-periodo?fecha_inicio=${fechaInicio.value}&fecha_fin=${fechaFin.value}`)
-    ventasPeriodo.value = data
-  } catch {}
+    const token = localStorage.getItem('token')
+    const res = await fetch(`http://localhost:3000/api/reportes/exportar-csv?tipo=${tipo}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${tipo}.csv`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  } catch (err) {
+    console.error('Error al exportar:', err)
+  }
 }
+
 
 onMounted(async () => {
   try {
@@ -277,10 +276,7 @@ onMounted(async () => {
   display: flex; align-items: center; gap: 16px;
 }
 
-.stat-icon {
-  width: 44px; height: 44px; border-radius: 10px;
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-}
+.stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .stat-icon.teal { background: rgba(115,191,176,0.15); color: var(--teal); }
 .stat-icon.green { background: rgba(149,191,117,0.15); color: var(--green); }
 .stat-icon.dark { background: rgba(9,40,48,0.1); color: var(--dark); }
@@ -291,45 +287,35 @@ onMounted(async () => {
 
 .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 
-.card {
-  background: var(--white); border-radius: var(--radius);
-  border: 1.5px solid var(--border); padding: 20px;
-}
+.card { background: var(--white); border-radius: var(--radius); border: 1.5px solid var(--border); padding: 20px; }
 
-.card h2 {
-  font-size: 15px; font-weight: 700; margin-bottom: 16px;
-  display: flex; align-items: center; gap: 8px;
-}
+.card h2 { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
 
 .full-width { grid-column: 1 / -1; }
 
-.card-header-row {
-  display: flex; align-items: center; justify-content: space-between;
-  flex-wrap: wrap; gap: 12px; margin-bottom: 16px;
-}
+.card-header-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
 .card-header-row h2 { margin-bottom: 0; }
 
-.filtros { display: flex; align-items: center; gap: 8px; }
+.filtros { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .date-input { width: 140px; }
 
-.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.data-table th {
-  text-align: left; padding: 8px 12px;
-  font-size: 11px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.05em; color: var(--text-light);
-  border-bottom: 1.5px solid var(--border);
+.btn-export {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--dark); color: var(--teal);
+  border: none; padding: 6px 12px; border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
 }
+.btn-export:hover { background: var(--teal); color: white; }
+
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th { text-align: left; padding: 8px 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-light); border-bottom: 1.5px solid var(--border); }
 .data-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
 .data-table tr:last-child td { border-bottom: none; }
 .data-table tr:hover td { background: var(--gray); }
 
-.row-alert td { }
 .text-red { color: #e05555; font-weight: 700; }
 
-.estado-badge {
-  font-size: 11px; font-weight: 600; padding: 3px 8px;
-  border-radius: 999px; text-transform: uppercase;
-}
+.estado-badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; text-transform: uppercase; }
 .estado-badge.completada { background: #d4f0dc; color: #1a7f37; }
 .estado-badge.cancelada { background: #fde8e8; color: #cf3131; }
 .estado-badge.pendiente { background: #fff3cd; color: #856404; }

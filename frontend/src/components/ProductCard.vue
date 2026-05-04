@@ -7,7 +7,7 @@
         class="product-img"
         @error="e => e.target.src = 'https://placehold.co/300x300?text=Sin+imagen'"
       />
-      <div class="product-category">{{ producto.categoria }}</div>
+      
     </div>
 
     <div class="product-body">
@@ -96,19 +96,7 @@ const decrease = () => cart.updateQuantity(props.producto.id_producto, qty.value
 
 .product-card:hover .product-img { transform: scale(1.05); }
 
-.product-category {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background: var(--dark);
-  color: var(--white);
-  font-size: 10px;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 999px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
+
 
 .product-body {
   padding: 14px;
