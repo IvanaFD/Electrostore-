@@ -115,3 +115,24 @@ export const recibirOrden = async (id_orden) => {
     client.release();
   }
 };
+
+export const cancelarOrden = async (id) => {
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    const orden = await client.query(
+      'SELECT * FROM OrdenCompra WHERE id_orden = $1 AND estado = $2',
+      [id, 'pendiente']
+    )
+    if (!orden.rows[0]) return null
+    await client.query('DELETE FROM DetalleOrden WHERE id_orden = $1', [id])
+    await client.query('DELETE FROM OrdenCompra WHERE id_orden = $1', [id])
+    await client.query('COMMIT')
+    return orden.rows[0]
+  } catch (err) {
+    await client.query('ROLLBACK')
+    throw err
+  } finally {
+    client.release()
+  }
+}

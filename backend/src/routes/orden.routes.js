@@ -63,4 +63,15 @@ router.patch('/:id/recibir', authMiddleware, roleGuard('admin', 'vendedor'), asy
   }
 });
 
+router.delete('/:id', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res) => {
+  try {
+    const orden = await repo.cancelarOrden(req.params.id)
+    if (!orden) return res.status(404).json({ error: 'Orden no encontrada o ya fue recibida' })
+    res.json({ message: 'Orden cancelada correctamente' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Error al cancelar orden' })
+  }
+})
+
 export default router;
