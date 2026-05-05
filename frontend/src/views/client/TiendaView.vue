@@ -40,7 +40,7 @@
               <div v-for="i in 12" :key="i" class="skeleton-card" />
             </div>
             <div v-else-if="productosFiltrados.length === 0" class="empty-state">
-              <p>😔 No se encontraron productos</p>
+              <p> No se encontraron productos</p>
             </div>
             <div v-else class="products-grid">
               <ProductCard
