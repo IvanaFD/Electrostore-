@@ -13,7 +13,7 @@
           <div v-for="i in 8" :key="i" class="skeleton-card" />
         </div>
         <div v-else-if="productos.length === 0" class="empty-state">
-          😔 No hay productos en esta categoría
+           No hay productos en esta categoría
         </div>
         <div v-else class="products-grid">
           <ProductCard v-for="p in productos" :key="p.id_producto" :producto="p" />
