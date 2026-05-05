@@ -4,15 +4,15 @@ services:
     networks:
       - electrostore_net
     environment:
-      POSTGRES_USER: proy2
-      POSTGRES_PASSWORD: secret
-      POSTGRES_DB: electrostore
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U proy2 -d electrostore"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -27,12 +27,12 @@ services:
     volumes:
       - ./database:/sql
     environment:
-      PGPASSWORD: secret
+      PGPASSWORD: ${POSTGRES_PASSWORD}
     command: >
       sh -c "
-      psql -h db -U proy2 -d electrostore -v ON_ERROR_STOP=1 -c 'DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;' &&
-      psql -h db -U proy2 -d electrostore -v ON_ERROR_STOP=1 -f /sql/01-ddl.sql &&
-      psql -h db -U proy2 -d electrostore -v ON_ERROR_STOP=1 -f /sql/02-seed.sql
+        psql -h db -U ${POSTGRES_USER} -d ${POSTGRES_DB} -v ON_ERROR_STOP=1 -c 'DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;' &&
+        psql -h db -U ${POSTGRES_USER} -d ${POSTGRES_DB} -v ON_ERROR_STOP=1 -f /sql/01-ddl.sql &&
+        psql -h db -U ${POSTGRES_USER} -d ${POSTGRES_DB} -v ON_ERROR_STOP=1 -f /sql/02-seed.sql
       "
 
   backend:
@@ -48,13 +48,13 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_USER=proy2
-      - DB_PASSWORD=secret
-      - DB_NAME=electrostore
-      - JWT_SECRET=electrostore_jwt_secret_2026_proy2
-      - PORT=3000
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT=${PORT}
     depends_on:
       db-init:
         condition: service_completed_successfully
