@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
-import '../../styles/LoginPage.css'
+import '../../styles/auth.css'
 
 export default function LoginPage() {
     const navigate = useNavigate()

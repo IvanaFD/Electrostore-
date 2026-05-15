@@ -121,3 +121,16 @@
   .auth-page { grid-template-columns: 1fr; }
   .auth-left { display: none; }
 }
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.success-msg {
+  font-size: 13px;
+  color: #2da44e;
+  margin-bottom: 12px;
+}
+
