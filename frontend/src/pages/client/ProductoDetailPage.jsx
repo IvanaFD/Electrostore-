@@ -4,7 +4,7 @@ import Navbar from '@/components/Navbar'
 import { useCart } from '@/contexts/CartContext'
 import { useAuth } from '@/contexts/AuthContext'
 import api from '@/services/api'
-import '@/styles/producto-detail.css'
+import '@/styles/productodetail.css'
 
 export default function ProductoDetailPage() {
     const { id } = useParams()
