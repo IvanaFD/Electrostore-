@@ -8,6 +8,9 @@ import HomePage from './pages/client/HomePage'
 import TiendaPage from './pages/client/TiendaPage'
 import CategoriaPage from './pages/client/CategoriaPage'
 import ProductoDetailPage from './pages/client/ProductoDetailPage'
+import CarritoPage from './pages/client/CarritoPage'
+import PerfilPage from './pages/client/PerfilPage'
+
 
 
 
@@ -34,8 +37,15 @@ function AppRoutes() {
         <Route path="/" element={<HomePage />} />
         <Route path="/tienda" element={<TiendaPage />} />
         <Route path="/tienda/categoria/:id" element={<CategoriaPage />} />
+        <Route path="/producto/:id" element={<ProductoDetailPage />} />
 
-        
+
+        <Route path="/carrito" element={<CarritoPage />} />
+        <Route path="/perfil" element={
+            <ProtectedRoute requiredRol="cliente">
+                <PerfilPage />
+            </ProtectedRoute>
+        } />
 
         <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
