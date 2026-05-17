@@ -1,0 +1,94 @@
+.perfil-page { padding: 40px 0 80px; min-height: calc(100vh - 100px); background: var(--gray); }
+
+.perfil-layout { display: grid; grid-template-columns: 260px 1fr; gap: 32px; align-items: start; }
+
+.perfil-sidebar {
+    background: var(--white); border-radius: var(--radius);
+    border: 1.5px solid var(--border); padding: 32px 24px;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    position: sticky; top: 120px; text-align: center;
+}
+
+.avatar {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: var(--teal); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.perfil-sidebar h3 { font-size: 18px; }
+.perfil-sidebar p { font-size: 13px; color: var(--text-light); }
+
+.rol-badge {
+    background: var(--alabaster); color: var(--dark);
+    padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600;
+}
+
+.logout-btn { margin-top: 8px; width: 100%; justify-content: center; }
+
+.perfil-content { display: flex; flex-direction: column; gap: 24px; }
+
+.perfil-section {
+    background: var(--white); border-radius: var(--radius);
+    border: 1.5px solid var(--border); padding: 28px;
+}
+.perfil-section h2 { font-size: 20px; margin-bottom: 20px; }
+
+.datos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.dato { display: flex; flex-direction: column; gap: 4px; }
+.dato-label { font-size: 12px; font-weight: 600; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.05em; }
+.dato span:last-child { font-size: 15px; font-weight: 500; }
+
+.section-header-row {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px; margin-bottom: 20px;
+}
+
+.filtros { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.date-input { width: 150px; }
+
+.loading-text { color: var(--text-light); font-size: 14px; }
+.empty-state { text-align: center; padding: 40px; color: var(--text-light); }
+
+.ventas-list { display: flex; flex-direction: column; gap: 12px; }
+
+.venta-card { border: 1.5px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+
+.venta-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 16px; background: var(--gray);
+}
+
+.venta-id { font-weight: 700; font-size: 14px; }
+.venta-fecha { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+
+.venta-right { text-align: right; }
+.venta-total { font-weight: 700; font-size: 16px; margin-top: 4px; }
+
+.venta-estado {
+    font-size: 11px; font-weight: 600; padding: 3px 10px;
+    border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.venta-estado.completada { background: #d4f0dc; color: #1a7f37; }
+.venta-estado.cancelada { background: #fde8e8; color: #cf3131; }
+
+.venta-detalle { padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; }
+.detalle-item {
+    display: flex; justify-content: space-between;
+    font-size: 13px; color: var(--text-light);
+}
+
+.btn-teal {
+    background: var(--teal); color: white; border: none;
+    padding: 8px 16px; border-radius: var(--radius-sm);
+    font-weight: 600; cursor: pointer; font-size: 13px;
+    transition: opacity 0.15s;
+}
+.btn-teal:hover { opacity: 0.85; }
+
+@media (max-width: 768px) {
+    .perfil-layout { grid-template-columns: 1fr; }
+    .perfil-sidebar { position: static; }
+    .datos-grid { grid-template-columns: 1fr; }
+}
