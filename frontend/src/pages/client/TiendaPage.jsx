@@ -55,7 +55,7 @@ export default function TiendaPage() {
             </div>
 
             <div className="tienda-layout">
-                <aside className="sidebar">
+                <aside className="tienda-sidebar">
                 <div className="sidebar-section">
                     <h3>Categorías</h3>
                     <div className="cat-list">
