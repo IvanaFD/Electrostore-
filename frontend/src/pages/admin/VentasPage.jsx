@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Eye, X } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
 import api from '@/services/api'
 
 const formatDate = (f) => new Date(f).toLocaleDateString('es-GT', {
@@ -9,6 +10,7 @@ const formatDate = (f) => new Date(f).toLocaleDateString('es-GT', {
 const NUEVA_VENTA = { id_cliente: '', id_empleado: '', items: [{ id_producto: '', cantidad: 1 }] }
 
 export default function VentasPage() {
+    const { user, isAdmin } = useAuth()
     const [ventas, setVentas] = useState([])
     const [clientes, setClientes] = useState([])
     const [empleados, setEmpleados] = useState([])
@@ -39,6 +41,11 @@ export default function VentasPage() {
     }, [])
 
     useEffect(() => { cargar() }, [cargar])
+
+    const empleadoActual = useMemo(
+        () => empleados.find(e => e.id_usuario === user?.id_usuario),
+        [empleados, user]
+    )
 
     const ventasFiltradas = useMemo(() => {
         let list = ventas
@@ -116,7 +123,7 @@ export default function VentasPage() {
 
             <div className="page-header">
                 <div><h1>Ventas</h1><p>{ventasFiltradas.length} ventas</p></div>
-                <button className="btn btn-primary" onClick={() => { setErrorNueva(''); setNueva(NUEVA_VENTA); setShowNueva(true) }}>+ Nueva Venta</button>
+                <button className="btn btn-primary" onClick={() => { setErrorNueva(''); setNueva({ ...NUEVA_VENTA, id_empleado: empleadoActual?.id_empleado || '' }); setShowNueva(true) }}>+ Nueva Venta</button>
             </div>
 
             <div className="filtros-bar">
@@ -202,11 +209,17 @@ export default function VentasPage() {
                                 </select>
                             </div>
                             <div className="form-group">
-                                <label>Empleado (opcional)</label>
-                                <select className="form-control" value={nueva.id_empleado} onChange={e => setNueva(p => ({ ...p, id_empleado: e.target.value }))}>
-                                    <option value="">Sin empleado</option>
-                                    {empleados.map(e => <option key={e.id_empleado} value={e.id_empleado}>{e.nombre} {e.apellido}</option>)}
-                                </select>
+                                <label>Empleado</label>
+                                {isAdmin ? (
+                                    <select className="form-control" value={nueva.id_empleado} onChange={e => setNueva(p => ({ ...p, id_empleado: e.target.value }))}>
+                                        <option value="">Sin empleado</option>
+                                        {empleados.map(e => <option key={e.id_empleado} value={e.id_empleado}>{e.nombre} {e.apellido}</option>)}
+                                    </select>
+                                ) : (
+                                    <p className="form-control" style={{ background: 'var(--gray)', color: 'var(--text)' }}>
+                                        {empleadoActual ? `${empleadoActual.nombre} ${empleadoActual.apellido}` : 'Sin empleado asignado'}
+                                    </p>
+                                )}
                             </div>
                             <div className="items-section">
                                 <div className="items-header">
