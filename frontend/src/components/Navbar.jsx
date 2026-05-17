@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { User, ShoppingCart } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
+import { useDebounce } from '@/hooks/useDebounce'
 import api from '@/services/api'
 import '@/styles/navbar.css'
 
@@ -16,9 +17,10 @@ export default function Navbar() {
     const [searchQuery, setSearchQuery] = useState('')
     const [categorias, setCategorias] = useState([])
     const [productos, setProductos] = useState([])
-    const [sugerencias, setSugerencias] = useState([])
     const [showSugerencias, setShowSugerencias] = useState(false)
     const [showMore, setShowMore] = useState(false)
+
+    const debouncedQuery = useDebounce(searchQuery, 250)
 
     useEffect(() => {
         const fetchData = async () => {
@@ -46,16 +48,21 @@ export default function Navbar() {
         }
     }, [searchQuery, navigate])
 
+    const sugerencias = useMemo(() => {
+        const q = debouncedQuery.toLowerCase().trim()
+        if (q.length < 2) return []
+        return productos
+            .filter(p => p.nombre.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q))
+            .slice(0, 6)
+    }, [debouncedQuery, productos])
+
+    useEffect(() => {
+        setShowSugerencias(sugerencias.length > 0)
+    }, [sugerencias])
+
     const buscarSugerencias = useCallback((e) => {
-        const q = e.target.value.toLowerCase().trim()
         setSearchQuery(e.target.value)
-        if (q.length < 2) { setSugerencias([]); setShowSugerencias(false); return }
-        const encontrados = productos
-        .filter(p => p.nombre.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q))
-        .slice(0, 6)
-        setSugerencias(encontrados)
-        setShowSugerencias(encontrados.length > 0)
-    }, [productos])
+    }, [])
 
     const seleccionarSugerencia = (p) => {
         setShowSugerencias(false)
