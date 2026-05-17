@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '@/components/Navbar'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLogout } from '@/hooks/useLogout'
 import api from '@/services/api'
 import '@/styles/perfil.css'
 
@@ -13,7 +14,8 @@ const formatDate = (fecha) =>
 
 export default function PerfilPage() {
     const navigate = useNavigate()
-    const { user, logout } = useAuth()
+    const { user } = useAuth()
+    const handleLogout = useLogout()
 
     const [cliente, setCliente] = useState(null)
     const [ventas, setVentas] = useState([])
@@ -60,10 +62,6 @@ export default function PerfilPage() {
         setFiltroActivo(false)
     }, [])
 
-    const handleLogout = useCallback(() => {
-        logout()
-        navigate('/')
-    }, [logout, navigate])
 
     return (
         <div>
@@ -76,7 +74,7 @@ export default function PerfilPage() {
                             <h3>{cliente?.nombre} {cliente?.apellido}</h3>
                             <p>{user?.username}</p>
                             <span className="rol-badge">Cliente</span>
-                            <button className="btn btn-outline logout-btn" onClick={handleLogout}>
+                            <button className="btn btn-outline perfil-logout-btn" onClick={handleLogout}>
                                 Cerrar sesión
                             </button>
                         </aside>

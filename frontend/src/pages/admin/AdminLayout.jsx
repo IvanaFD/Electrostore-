@@ -1,22 +1,18 @@
-import { useMemo, useCallback } from 'react'
-import { NavLink, Outlet, Link, useNavigate } from 'react-router-dom'
+import { useMemo } from 'react'
+import { NavLink, Outlet, Link } from 'react-router-dom'
 import { LayoutDashboard, Package, ShoppingCart, Truck, Users, UserCircle, LogOut } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLogout } from '@/hooks/useLogout'
 import '@/styles/admin.css'
 
 export default function AdminLayout() {
-    const navigate = useNavigate()
-    const { user, logout, isAdmin } = useAuth()
+    const { user, isAdmin } = useAuth()
+    const handleLogout = useLogout()
 
     const iniciales = useMemo(
         () => user?.username?.slice(0, 2).toUpperCase() || 'AD',
         [user]
     )
-
-    const handleLogout = useCallback(() => {
-        logout()
-        navigate('/login')
-    }, [logout, navigate])
 
     const navClass = ({ isActive }) => `nav-item${isActive ? ' active' : ''}`
 
