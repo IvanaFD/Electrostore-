@@ -1,0 +1,1076 @@
+openapi: 3.0.3
+info:
+  title: ElectroStore API
+  description: API REST para el sistema de gestión ElectroStore (cc3062 Proyecto 2)
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000
+    description: Desarrollo local
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      example:
+        error: Mensaje de error
+
+    Token:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          type: object
+          properties:
+            id_usuario:
+              type: integer
+            username:
+              type: string
+            rol:
+              type: string
+              enum: [admin, vendedor, supervisor, bodeguero, cliente]
+
+    Categoria:
+      type: object
+      properties:
+        id_categoria:
+          type: integer
+        nombre:
+          type: string
+        descripcion:
+          type: string
+
+    Producto:
+      type: object
+      properties:
+        id_producto:
+          type: integer
+        sku:
+          type: string
+        nombre:
+          type: string
+        descripcion:
+          type: string
+        marca:
+          type: string
+        precio_venta:
+          type: number
+        stock_actual:
+          type: integer
+        stock_minimo:
+          type: integer
+        imagen_url:
+          type: string
+        id_categoria:
+          type: integer
+        categoria:
+          type: string
+
+    Cliente:
+      type: object
+      properties:
+        id_cliente:
+          type: integer
+        nombre:
+          type: string
+        apellido:
+          type: string
+        email:
+          type: string
+        telefono:
+          type: string
+        direccion:
+          type: string
+        id_usuario:
+          type: integer
+
+    Empleado:
+      type: object
+      properties:
+        id_empleado:
+          type: integer
+        nombre:
+          type: string
+        apellido:
+          type: string
+        email:
+          type: string
+        telefono:
+          type: string
+        cargo:
+          type: string
+          enum: [vendedor, supervisor, bodeguero]
+        id_usuario:
+          type: integer
+        username:
+          type: string
+
+    Proveedor:
+      type: object
+      properties:
+        id_proveedor:
+          type: integer
+        nombre:
+          type: string
+        contacto:
+          type: string
+        email:
+          type: string
+        telefono:
+          type: string
+
+    ItemVenta:
+      type: object
+      properties:
+        id_producto:
+          type: integer
+        cantidad:
+          type: integer
+        precio_unitario:
+          type: number
+
+    Venta:
+      type: object
+      properties:
+        id_venta:
+          type: integer
+        fecha_venta:
+          type: string
+          format: date-time
+        total:
+          type: number
+        estado:
+          type: string
+          enum: [completada, cancelada]
+        id_cliente:
+          type: integer
+        cliente:
+          type: string
+        id_empleado:
+          type: integer
+        empleado:
+          type: string
+
+    ItemOrden:
+      type: object
+      properties:
+        id_producto:
+          type: integer
+        cantidad:
+          type: integer
+        precio_compra:
+          type: number
+
+    Orden:
+      type: object
+      properties:
+        id_orden:
+          type: integer
+        fecha_orden:
+          type: string
+          format: date-time
+        total:
+          type: number
+        estado:
+          type: string
+          enum: [pendiente, recibida, cancelada]
+        id_proveedor:
+          type: integer
+        proveedor:
+          type: string
+        id_empleado:
+          type: integer
+        empleado:
+          type: string
+
+paths:
+
+  # ─── AUTH ────────────────────────────────────────────────────────────────────
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Iniciar sesión
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                  example: admin01
+                password:
+                  type: string
+                  example: "123456"
+      responses:
+        "200":
+          description: Login exitoso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Token"
+        "400":
+          description: Campos requeridos faltantes
+        "401":
+          description: Credenciales incorrectas
+
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Registrar nuevo cliente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password, nombre, apellido, email]
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                nombre:
+                  type: string
+                apellido:
+                  type: string
+                email:
+                  type: string
+                telefono:
+                  type: string
+                direccion:
+                  type: string
+      responses:
+        "201":
+          description: Usuario creado
+        "409":
+          description: Username o email ya existe
+
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      summary: Obtener usuario autenticado
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Datos del usuario
+        "401":
+          description: No autorizado
+
+  /api/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Cerrar sesión
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Sesión cerrada
+
+  # ─── CATEGORÍAS ──────────────────────────────────────────────────────────────
+
+  /api/categorias:
+    get:
+      tags: [Categorías]
+      summary: Listar todas las categorías
+      responses:
+        "200":
+          description: Lista de categorías
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Categoria"
+    post:
+      tags: [Categorías]
+      summary: Crear categoría (admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre]
+              properties:
+                nombre:
+                  type: string
+                descripcion:
+                  type: string
+      responses:
+        "201":
+          description: Categoría creada
+        "401":
+          description: No autorizado
+        "403":
+          description: Rol insuficiente
+
+  /api/categorias/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags: [Categorías]
+      summary: Obtener categoría por ID
+      responses:
+        "200":
+          description: Categoría encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Categoria"
+        "404":
+          description: No encontrada
+    put:
+      tags: [Categorías]
+      summary: Actualizar categoría (admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre:
+                  type: string
+                descripcion:
+                  type: string
+      responses:
+        "200":
+          description: Categoría actualizada
+        "404":
+          description: No encontrada
+    delete:
+      tags: [Categorías]
+      summary: Eliminar categoría (admin)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Eliminada correctamente
+        "409":
+          description: Tiene productos asociados
+
+  # ─── PRODUCTOS ───────────────────────────────────────────────────────────────
+
+  /api/productos:
+    get:
+      tags: [Productos]
+      summary: Listar todos los productos (público)
+      responses:
+        "200":
+          description: Lista de productos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Producto"
+    post:
+      tags: [Productos]
+      summary: Crear producto (admin/vendedor)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sku, nombre, marca, precio_venta, stock_actual, stock_minimo, id_categoria]
+              properties:
+                sku:
+                  type: string
+                  example: TEC-001
+                nombre:
+                  type: string
+                descripcion:
+                  type: string
+                marca:
+                  type: string
+                precio_venta:
+                  type: number
+                stock_actual:
+                  type: integer
+                stock_minimo:
+                  type: integer
+                imagen_url:
+                  type: string
+                id_categoria:
+                  type: integer
+      responses:
+        "201":
+          description: Producto creado
+        "409":
+          description: SKU ya existe
+
+  /api/productos/stock-bajo:
+    get:
+      tags: [Productos]
+      summary: Productos con stock bajo (admin/vendedor)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Lista de productos con stock bajo
+
+  /api/productos/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags: [Productos]
+      summary: Obtener producto por ID (público)
+      responses:
+        "200":
+          description: Producto encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Producto"
+        "404":
+          description: No encontrado
+    put:
+      tags: [Productos]
+      summary: Actualizar producto (admin/vendedor)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Producto"
+      responses:
+        "200":
+          description: Producto actualizado
+        "404":
+          description: No encontrado
+    delete:
+      tags: [Productos]
+      summary: Eliminar producto (admin)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Eliminado correctamente
+        "409":
+          description: Tiene ventas u órdenes asociadas
+
+  # ─── CLIENTES ────────────────────────────────────────────────────────────────
+
+  /api/clientes:
+    get:
+      tags: [Clientes]
+      summary: Listar clientes (admin/vendedor)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Lista de clientes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Cliente"
+    post:
+      tags: [Clientes]
+      summary: Crear cliente (admin/vendedor)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Cliente"
+      responses:
+        "201":
+          description: Cliente creado
+        "409":
+          description: Email ya registrado
+
+  /api/clientes/me:
+    get:
+      tags: [Clientes]
+      summary: Perfil del cliente autenticado
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Datos del cliente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cliente"
+        "404":
+          description: Perfil no encontrado
+
+  /api/clientes/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags: [Clientes]
+      summary: Obtener cliente por ID (admin/vendedor)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Cliente encontrado
+        "404":
+          description: No encontrado
+    put:
+      tags: [Clientes]
+      summary: Actualizar cliente completo (admin/vendedor)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Cliente"
+      responses:
+        "200":
+          description: Cliente actualizado
+    patch:
+      tags: [Clientes]
+      summary: Actualizar campos parciales (autenticado)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre:
+                  type: string
+                apellido:
+                  type: string
+                email:
+                  type: string
+                telefono:
+                  type: string
+                direccion:
+                  type: string
+      responses:
+        "200":
+          description: Cliente actualizado
+        "403":
+          description: No puedes modificar datos de otro cliente
+    delete:
+      tags: [Clientes]
+      summary: Eliminar cliente (admin)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Eliminado correctamente
+
+  # ─── EMPLEADOS ───────────────────────────────────────────────────────────────
+
+  /api/empleados:
+    get:
+      tags: [Empleados]
+      summary: Listar empleados (admin/vendedor)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Lista de empleados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Empleado"
+    post:
+      tags: [Empleados]
+      summary: Crear empleado (admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre, apellido, email, cargo]
+              properties:
+                nombre:
+                  type: string
+                apellido:
+                  type: string
+                email:
+                  type: string
+                telefono:
+                  type: string
+                cargo:
+                  type: string
+                  enum: [vendedor, supervisor, bodeguero]
+      responses:
+        "201":
+          description: Empleado creado
+        "400":
+          description: Cargo inválido
+        "409":
+          description: Email ya registrado
+
+  /api/empleados/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags: [Empleados]
+      summary: Obtener empleado por ID (admin/vendedor)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Empleado encontrado
+        "404":
+          description: No encontrado
+    put:
+      tags: [Empleados]
+      summary: Actualizar empleado (admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Empleado"
+      responses:
+        "200":
+          description: Empleado actualizado
+    delete:
+      tags: [Empleados]
+      summary: Eliminar empleado (admin)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Eliminado correctamente
+        "409":
+          description: Tiene ventas u órdenes asociadas
+
+  # ─── PROVEEDORES ─────────────────────────────────────────────────────────────
+
+  /api/proveedores:
+    get:
+      tags: [Proveedores]
+      summary: Listar proveedores (admin/vendedor)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Lista de proveedores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Proveedor"
+    post:
+      tags: [Proveedores]
+      summary: Crear proveedor (admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Proveedor"
+      responses:
+        "201":
+          description: Proveedor creado
+
+  /api/proveedores/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags: [Proveedores]
+      summary: Obtener proveedor por ID (admin/vendedor)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Proveedor encontrado
+        "404":
+          description: No encontrado
+    put:
+      tags: [Proveedores]
+      summary: Actualizar proveedor (admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Proveedor"
+      responses:
+        "200":
+          description: Proveedor actualizado
+    delete:
+      tags: [Proveedores]
+      summary: Eliminar proveedor (admin)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Eliminado correctamente
+        "409":
+          description: Tiene productos asociados
+
+  # ─── VENTAS ──────────────────────────────────────────────────────────────────
+
+  /api/ventas:
+    get:
+      tags: [Ventas]
+      summary: Listar todas las ventas (admin/vendedor)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Lista de ventas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Venta"
+    post:
+      tags: [Ventas]
+      summary: Crear venta (autenticado — cliente usa su propio perfil)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                id_cliente:
+                  type: integer
+                  description: Requerido solo si el rol es admin/vendedor
+                id_empleado:
+                  type: integer
+                items:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/ItemVenta"
+      responses:
+        "201":
+          description: Venta creada
+        "400":
+          description: Stock insuficiente o producto no encontrado
+
+  /api/ventas/mis-compras:
+    get:
+      tags: [Ventas]
+      summary: Compras del cliente autenticado
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Lista de compras con detalle
+
+  /api/ventas/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags: [Ventas]
+      summary: Obtener venta con detalle (admin/vendedor)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Venta con detalle de items
+        "404":
+          description: No encontrada
+
+  /api/ventas/{id}/cancelar:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    patch:
+      tags: [Ventas]
+      summary: Cancelar venta (admin/vendedor)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Venta cancelada
+        "400":
+          description: Ya está cancelada o no encontrada
+
+  # ─── ÓRDENES ─────────────────────────────────────────────────────────────────
+
+  /api/ordenes:
+    get:
+      tags: [Órdenes]
+      summary: Listar órdenes de compra (admin/vendedor)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Lista de órdenes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Orden"
+    post:
+      tags: [Órdenes]
+      summary: Crear orden de compra (admin/vendedor)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id_proveedor, id_empleado, items]
+              properties:
+                id_proveedor:
+                  type: integer
+                id_empleado:
+                  type: integer
+                items:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/ItemOrden"
+      responses:
+        "201":
+          description: Orden creada
+        "400":
+          description: Producto no encontrado o datos inválidos
+
+  /api/ordenes/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags: [Órdenes]
+      summary: Obtener orden con detalle (admin/vendedor)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Orden con detalle
+        "404":
+          description: No encontrada
+    delete:
+      tags: [Órdenes]
+      summary: Cancelar orden (admin/vendedor)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Orden cancelada
+        "404":
+          description: No encontrada o ya fue recibida
+
+  /api/ordenes/{id}/recibir:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    patch:
+      tags: [Órdenes]
+      summary: Marcar orden como recibida — actualiza stock (admin/vendedor)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Orden recibida y stock actualizado
+        "400":
+          description: Ya fue recibida o no encontrada
+
+  # ─── REPORTES ────────────────────────────────────────────────────────────────
+
+  /api/reportes/productos-mas-vendidos:
+    get:
+      tags: [Reportes]
+      summary: Productos más vendidos por ingresos (admin/vendedor)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Lista ordenada por total de ingresos
+
+  /api/reportes/stock-bajo:
+    get:
+      tags: [Reportes]
+      summary: Productos cuyo stock_actual < stock_minimo (admin/vendedor)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Lista de productos con stock bajo
+
+  /api/reportes/ventas-por-categoria:
+    get:
+      tags: [Reportes]
+      summary: Total de ventas e ingresos agrupados por categoría (admin/vendedor)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Ventas por categoría
+
+  /api/reportes/ventas-por-periodo:
+    get:
+      tags: [Reportes]
+      summary: Ventas filtradas por rango de fechas usando CTE (admin/vendedor)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: fecha_inicio
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          example: "2026-01-01"
+        - name: fecha_fin
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          example: "2026-12-31"
+      responses:
+        "200":
+          description: Ventas en el período
+        "400":
+          description: Fechas requeridas
+
+  /api/reportes/clientes-con-compras:
+    get:
+      tags: [Reportes]
+      summary: Clientes que han realizado al menos una compra (admin/vendedor)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Clientes con total de compras y gasto
+
+  /api/reportes/productos-sin-ventas:
+    get:
+      tags: [Reportes]
+      summary: Productos sin ninguna venta registrada (admin/vendedor)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Lista de productos sin ventas
+
+  /api/reportes/ventas-por-empleado:
+    get:
+      tags: [Reportes]
+      summary: Total de ventas e ingresos por empleado (admin/vendedor)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Ventas agrupadas por empleado
+
+  /api/reportes/exportar-csv:
+    get:
+      tags: [Reportes]
+      summary: Exportar reporte como CSV (admin/vendedor)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tipo
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - productos-mas-vendidos
+              - ventas-por-categoria
+              - clientes-con-compras
+              - stock-bajo
+              - ventas-por-empleado
+              - productos-sin-ventas
+              - ventas-por-periodo
+          example: productos-mas-vendidos
+        - name: fecha_inicio
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Solo requerido si tipo=ventas-por-periodo
+        - name: fecha_fin
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Solo requerido si tipo=ventas-por-periodo
+      responses:
+        "200":
+          description: Archivo CSV
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
