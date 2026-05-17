@@ -10,6 +10,13 @@ import CategoriaPage from './pages/client/CategoriaPage'
 import ProductoDetailPage from './pages/client/ProductoDetailPage'
 import CarritoPage from './pages/client/CarritoPage'
 import PerfilPage from './pages/client/PerfilPage'
+import AdminLayout from './pages/admin/AdminLayout'
+import DashboardPage from './pages/admin/DashboardPage'
+import InventarioPage from './pages/admin/InventarioPage'
+import VentasPage from './pages/admin/VentasPage'
+import OrdenesPage from './pages/admin/OrdenesPage'
+import EmpleadosPage from './pages/admin/EmpleadosPage'
+import PerfilAdminPage from './pages/admin/PerfilAdminPage'
 
 
 
@@ -46,6 +53,20 @@ function AppRoutes() {
                 <PerfilPage />
             </ProtectedRoute>
         } />
+
+        <Route path="/admin" element={
+            <ProtectedRoute requiredRol="staff">
+                <AdminLayout />
+            </ProtectedRoute>
+        }>
+            <Route index element={<DashboardPage />} />
+            <Route path="inventario" element={<InventarioPage />} />
+            <Route path="ventas" element={<VentasPage />} />
+            <Route path="ordenes" element={<OrdenesPage />} />
+            <Route path="empleados" element={<EmpleadosPage />} />
+            <Route path="perfil" element={<PerfilAdminPage />} />
+        </Route>
+
 
         <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
