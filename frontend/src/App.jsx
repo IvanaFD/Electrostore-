@@ -32,6 +32,15 @@ function ProtectedRoute({ children, requiredRol }) {
     return children
 }
 
+function ClienteRoute({ children }) {
+    const { isLoggedIn, isStaff, loading } = useAuth()
+
+    if (loading) return null
+    if (isLoggedIn && isStaff) return <Navigate to="/" replace />
+
+    return children
+}
+
 function AppRoutes() {
     const { loading } = useAuth()
     if (loading) return null
@@ -42,12 +51,11 @@ function AppRoutes() {
         <Route path="/registro" element={<RegistroPage />} />
 
         <Route path="/" element={<HomePage />} />
-        <Route path="/tienda" element={<TiendaPage />} />
-        <Route path="/tienda/categoria/:id" element={<CategoriaPage />} />
-        <Route path="/producto/:id" element={<ProductoDetailPage />} />
+        <Route path="/tienda" element={<ClienteRoute><TiendaPage /></ClienteRoute>} />
+        <Route path="/tienda/categoria/:id" element={<ClienteRoute><CategoriaPage /></ClienteRoute>} />
+        <Route path="/producto/:id" element={<ClienteRoute><ProductoDetailPage /></ClienteRoute>} />
 
-
-        <Route path="/carrito" element={<CarritoPage />} />
+        <Route path="/carrito" element={<ClienteRoute><CarritoPage /></ClienteRoute>} />
         <Route path="/perfil" element={
             <ProtectedRoute requiredRol="cliente">
                 <PerfilPage />
