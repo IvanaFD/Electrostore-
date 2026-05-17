@@ -2,7 +2,7 @@ import { createContext, useContext, useReducer, useEffect, useMemo, useCallback 
 
 const CartContext = createContext(null)
 
-const cartReducer = (state, action) => {
+export const cartReducer = (state, action) => {
     switch (action.type) {
         case 'ADD_ITEM': {
         const existing = state.items.find(i => i.id_producto === action.payload.id_producto)
