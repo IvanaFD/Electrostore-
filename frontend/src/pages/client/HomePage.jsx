@@ -57,7 +57,7 @@ const CAT_ICONS = {
             ])
             setMasVendidos(prods.slice(0, 8))
             setCategorias(cats)
-        } catch {}
+        } catch { /* network error, ignore */ }
         setLoading(false)
         }
         fetchData()

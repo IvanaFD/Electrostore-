@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { Package, ShoppingCart, Users, AlertTriangle, Download } from 'lucide-react'
 import api from '@/services/api'
 import '@/styles/dashboard.css'

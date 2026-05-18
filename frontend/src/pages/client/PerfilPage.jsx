@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
 import Navbar from '@/components/Navbar'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLogout } from '@/hooks/useLogout'
@@ -13,7 +12,6 @@ const formatDate = (fecha) =>
     })
 
 export default function PerfilPage() {
-    const navigate = useNavigate()
     const { user } = useAuth()
     const handleLogout = useLogout()
 

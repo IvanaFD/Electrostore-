@@ -31,7 +31,7 @@ export default function Navbar() {
             ])
             setCategorias(cats)
             setProductos(prods)
-        } catch {}
+        } catch { /* network error, ignore */ }
         }
         fetchData()
     }, [])

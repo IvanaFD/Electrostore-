@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -44,7 +44,7 @@ export default function RegistroPage() {
         return newErrors
     }
 
-    const handleRegistro = useCallback(async (e) => {
+    const handleRegistro = async (e) => {
         e.preventDefault()
         const validationErrors = validate()
         if (Object.keys(validationErrors).length > 0) {
@@ -62,7 +62,7 @@ export default function RegistroPage() {
         } finally {
         setLoading(false)
         }
-    }, [form, auth, navigate])
+    }
 
     return (
         <div className="auth-page">
