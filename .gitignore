@@ -8,8 +8,9 @@ dist/
 dist-ssr/
 build/
 
-# Variables de entorno
+# Variables de entorno y configuración local
 .env
+docker-compose.yml
 .env.local
 .env.development.local
 .env.test.local

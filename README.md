@@ -20,6 +20,7 @@ Aplicación web fullstack para gestionar inventario y ventas de una tienda de co
 git clone https://github.com/IvanaFD/Electrostore-.git
 cd Electrostore-
 cp .env.example .env
+cp docker-compose.yml.example docker-compose.yml
 docker compose up --build
 ```
 
