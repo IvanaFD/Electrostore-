@@ -8,7 +8,7 @@ const router = express.Router();
 repo.createView().catch(console.error);
 
 // GET /api/reportes/stock-bajo - usa VIEW
-router.get('/stock-bajo', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res) => {
+router.get('/stock-bajo', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async (req, res) => {
   try {
     const data = await repo.getStockBajo();
     res.json(data);
@@ -19,7 +19,7 @@ router.get('/stock-bajo', authMiddleware, roleGuard('admin', 'vendedor'), async 
 });
 
 // GET /api/reportes/productos-mas-vendidos - GROUP BY + HAVING
-router.get('/productos-mas-vendidos', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res) => {
+router.get('/productos-mas-vendidos', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async (req, res) => {
   try {
     const data = await repo.getProductosMasVendidos();
     res.json(data);
@@ -30,7 +30,7 @@ router.get('/productos-mas-vendidos', authMiddleware, roleGuard('admin', 'vended
 });
 
 // GET /api/reportes/ventas-por-categoria - GROUP BY + agregacion
-router.get('/ventas-por-categoria', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res) => {
+router.get('/ventas-por-categoria', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async (req, res) => {
   try {
     const data = await repo.getVentasPorCategoria();
     res.json(data);
@@ -41,7 +41,7 @@ router.get('/ventas-por-categoria', authMiddleware, roleGuard('admin', 'vendedor
 });
 
 // GET /api/reportes/ventas-por-periodo?fecha_inicio=2026-01-01&fecha_fin=2026-12-31 - CTE
-router.get('/ventas-por-periodo', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res) => {
+router.get('/ventas-por-periodo', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async (req, res) => {
   try {
     const { fecha_inicio, fecha_fin } = req.query;
     if (!fecha_inicio || !fecha_fin) {
@@ -56,7 +56,7 @@ router.get('/ventas-por-periodo', authMiddleware, roleGuard('admin', 'vendedor')
 });
 
 // GET /api/reportes/clientes-con-compras - SUBQUERY IN
-router.get('/clientes-con-compras', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res) => {
+router.get('/clientes-con-compras', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async (req, res) => {
   try {
     const data = await repo.getClientesConCompras();
     res.json(data);
@@ -67,7 +67,7 @@ router.get('/clientes-con-compras', authMiddleware, roleGuard('admin', 'vendedor
 });
 
 // GET /api/reportes/productos-sin-ventas - SUBQUERY EXISTS
-router.get('/productos-sin-ventas', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res) => {
+router.get('/productos-sin-ventas', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async (req, res) => {
   try {
     const data = await repo.getProductosSinVentas();
     res.json(data);
@@ -78,7 +78,7 @@ router.get('/productos-sin-ventas', authMiddleware, roleGuard('admin', 'vendedor
 });
 
 // GET /api/reportes/ventas-por-empleado - GROUP BY
-router.get('/ventas-por-empleado', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res) => {
+router.get('/ventas-por-empleado', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async (req, res) => {
   try {
     const data = await repo.getVentasPorEmpleado();
     res.json(data);
@@ -89,7 +89,7 @@ router.get('/ventas-por-empleado', authMiddleware, roleGuard('admin', 'vendedor'
 });
 
 // GET /api/reportes/ exportar-csv?tipo =
-router.get('/exportar-csv', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res) => {
+router.get('/exportar-csv', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async (req, res) => {
   try {
     const tipo = req.query.tipo || 'productos-mas-vendidos'
     let data = []

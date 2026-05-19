@@ -6,7 +6,7 @@ import { authMiddleware, roleGuard } from '../middlewares/auth.middleware.js';
 const router = express.Router();
 
 // GET /api/ventas
-router.get('/', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res) => {
+router.get('/', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async (req, res) => {
   try {
     const ventas = await repo.getAll();
     res.json(ventas);
@@ -39,7 +39,7 @@ router.get('/mis-compras', authMiddleware, roleGuard('cliente'), async (req, res
 });
 
 // GET /api/ventas/:id
-router.get('/:id', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res) => {
+router.get('/:id', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async (req, res) => {
   try {
     const venta = await repo.getById(req.params.id);
     if (!venta) return res.status(404).json({ error: 'Venta no encontrada' });

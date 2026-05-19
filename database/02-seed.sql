@@ -1,12 +1,15 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- admin/admin123 | empleado1/em123 | empleado2/emp456 | cliente1/cl123 | cliente2/cl456
+-- bodeguero1/bod123 | auditor1/aud123
 INSERT INTO Usuario (username, password_hash, rol) VALUES
-('admin',     crypt('admin123', gen_salt('bf', 10)), 'admin'),
-('empleado1', crypt('em123',    gen_salt('bf', 10)), 'vendedor'),
-('empleado2', crypt('emp456',   gen_salt('bf', 10)), 'vendedor'),
-('cliente1',  crypt('cl123',    gen_salt('bf', 10)), 'cliente'),
-('cliente2',  crypt('cl456',    gen_salt('bf', 10)), 'cliente');
+('admin',       crypt('admin123', gen_salt('bf', 10)), 'admin'),
+('empleado1',   crypt('em123',    gen_salt('bf', 10)), 'vendedor'),
+('empleado2',   crypt('em456',   gen_salt('bf', 10)), 'vendedor'),
+('cliente1',    crypt('cl123',    gen_salt('bf', 10)), 'cliente'),
+('cliente2',    crypt('cl456',    gen_salt('bf', 10)), 'cliente'),
+('bodeguero1',  crypt('bod123',   gen_salt('bf', 10)), 'bodeguero'),
+('auditor1',    crypt('aud123',   gen_salt('bf', 10)), 'auditor');
 
 INSERT INTO Categoria (nombre, descripcion) VALUES
 ('Boards de Desarrollo',         'Microcontroladores y plataformas de desarrollo como Arduino y ESP32'),
@@ -51,9 +54,10 @@ INSERT INTO Proveedor (nombre, nombre_contacto, telefono, email, direccion) VALU
 ('TechWorld GT',                  'Lorena Aguilar',   '7890-1236', 'lorena@techworldgt.com',       'Villa Nueva, Guatemala');
 
 INSERT INTO Empleado (nombre, apellido, email, telefono, cargo, id_usuario) VALUES
-('Administrador', 'ElectroStore', 'admin@electrostore.com', '5555-0000', 'supervisor', 1),
-('Pedro',     'Martinez',  'pedro@electrostore.com',       '5555-7777', 'vendedor',   2),
-('Laura',     'Gomez',     'laura@electrostore.com',       '5555-8888', 'vendedor',   3),
+('Administrador', 'ElectroStore', 'admin@electrostore.com',      '5555-0000', 'supervisor', 1),
+('Pedro',     'Martinez',  'pedro@electrostore.com',             '5555-7777', 'vendedor',   2),
+('Laura',     'Gomez',     'laura@electrostore.com',             '5555-8888', 'vendedor',   3),
+('Carlos',    'Bodega',    'carlos.bodega@electrostore.com',     '5555-9001', 'bodeguero',  6),
 ('Miguel',    'Soto',      'miguel.s@electrostore.com',    '5555-8001', 'vendedor',   NULL),
 ('Carmen',    'Reyes',     'carmen.r@electrostore.com',    '5555-8002', 'vendedor',   NULL),
 ('Jorge',     'Hernandez', 'jorge.h@electrostore.com',     '5555-8003', 'bodeguero',  NULL),

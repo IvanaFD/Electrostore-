@@ -19,7 +19,7 @@ CREATE TABLE Usuario (
     id_usuario    SERIAL PRIMARY KEY,
     username      VARCHAR(50)  NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    rol           VARCHAR(20)  NOT NULL CHECK (rol IN ('admin', 'vendedor', 'cliente')),
+    rol           VARCHAR(20)  NOT NULL CHECK (rol IN ('admin', 'vendedor', 'cliente', 'bodeguero', 'auditor')),
     created_at    TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 

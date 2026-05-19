@@ -43,7 +43,9 @@ export function AuthProvider({ children }) {
   const isCliente = user?.rol === 'cliente'
   const isAdmin = user?.rol === 'admin'
   const isVendedor = user?.rol === 'vendedor'
-  const isStaff = ['admin', 'vendedor'].includes(user?.rol)
+  const isBodeguero = user?.rol === 'bodeguero'
+  const isAuditor = user?.rol === 'auditor'
+  const isStaff = ['admin', 'vendedor', 'bodeguero', 'auditor'].includes(user?.rol)
 
   const login = useCallback(async (username, password) => {
     const { data } = await api.post('/api/auth/login', { username, password })
@@ -64,7 +66,7 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={{
       token, user, isLoggedIn,
-      isCliente, isAdmin, isVendedor, isStaff,
+      isCliente, isAdmin, isVendedor, isBodeguero, isAuditor, isStaff,
       login, logout, loading
     }}>
       {children}

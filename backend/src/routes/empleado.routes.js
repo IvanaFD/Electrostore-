@@ -4,7 +4,7 @@ import { authMiddleware, roleGuard } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
-router.get('/', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res) => {
+router.get('/', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero', 'auditor'), async (req, res) => {
   try {
     const empleados = await repo.getAll();
     res.json(empleados);
@@ -14,7 +14,7 @@ router.get('/', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res)
   }
 });
 
-router.get('/:id', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res) => {
+router.get('/:id', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero', 'auditor'), async (req, res) => {
   try {
     const empleado = await repo.getById(req.params.id);
     if (!empleado) return res.status(404).json({ error: 'Empleado no encontrado' });

@@ -5,7 +5,7 @@ import { authMiddleware, roleGuard } from '../middlewares/auth.middleware.js';
 const router = express.Router();
 
 // GET /api/clientes
-router.get('/', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res) => {
+router.get('/', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async (req, res) => {
   try {
     const clientes = await repo.getAll();
     res.json(clientes);
@@ -28,7 +28,7 @@ router.get('/me', authMiddleware, roleGuard('cliente'), async (req, res) => {
 });
 
 // GET /api/clientes/:id
-router.get('/:id', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res) => {
+router.get('/:id', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async (req, res) => {
   try {
     const cliente = await repo.getById(req.params.id);
     if (!cliente) return res.status(404).json({ error: 'Cliente no encontrado' });
@@ -40,7 +40,7 @@ router.get('/:id', authMiddleware, roleGuard('admin', 'vendedor'), async (req, r
 });
 
 // POST /api/clientes
-router.post('/', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res) => {
+router.post('/', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async (req, res) => {
   try {
     const cliente = await repo.create(req.body);
     res.status(201).json(cliente);
@@ -54,7 +54,7 @@ router.post('/', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res
 });
 
 // PUT /api/clientes/:id
-router.put('/:id', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res) => {
+router.put('/:id', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async (req, res) => {
   try {
     const cliente = await repo.update(req.params.id, req.body);
     if (!cliente) return res.status(404).json({ error: 'Cliente no encontrado' });

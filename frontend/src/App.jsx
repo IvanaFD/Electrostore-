@@ -21,15 +21,22 @@ import PerfilAdminPage from './pages/admin/PerfilAdminPage'
 
 
 
-function ProtectedRoute({ children, requiredRol }) {
-    const { isLoggedIn, isStaff, isCliente, loading } = useAuth()
+function ProtectedRoute({ children, requiredRol, allowedRoles }) {
+    const { isLoggedIn, isStaff, isCliente, loading, user } = useAuth()
 
     if (loading) return null
     if (!isLoggedIn) return <Navigate to="/login" replace />
     if (requiredRol === 'staff' && !isStaff) return <Navigate to="/" replace />
     if (requiredRol === 'cliente' && !isCliente) return <Navigate to="/" replace />
+    if (allowedRoles && !allowedRoles.includes(user?.rol)) return <Navigate to="/admin" replace />
 
     return children
+}
+
+function AdminIndex() {
+    const { isBodeguero } = useAuth()
+    if (isBodeguero) return <Navigate to="/admin/inventario" replace />
+    return <DashboardPage />
 }
 
 function ClienteRoute({ children }) {
@@ -67,11 +74,23 @@ function AppRoutes() {
                 <AdminLayout />
             </ProtectedRoute>
         }>
-            <Route index element={<DashboardPage />} />
+            <Route index element={<AdminIndex />} />
             <Route path="inventario" element={<InventarioPage />} />
-            <Route path="ventas" element={<VentasPage />} />
-            <Route path="ordenes" element={<OrdenesPage />} />
-            <Route path="empleados" element={<EmpleadosPage />} />
+            <Route path="ventas" element={
+                <ProtectedRoute allowedRoles={['admin', 'vendedor']}>
+                    <VentasPage />
+                </ProtectedRoute>
+            } />
+            <Route path="ordenes" element={
+                <ProtectedRoute allowedRoles={['admin', 'vendedor', 'bodeguero']}>
+                    <OrdenesPage />
+                </ProtectedRoute>
+            } />
+            <Route path="empleados" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <EmpleadosPage />
+                </ProtectedRoute>
+            } />
             <Route path="perfil" element={<PerfilAdminPage />} />
         </Route>
 

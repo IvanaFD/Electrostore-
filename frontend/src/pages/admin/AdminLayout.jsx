@@ -6,7 +6,7 @@ import { useLogout } from '@/hooks/useLogout'
 import '@/styles/admin.css'
 
 export default function AdminLayout() {
-    const { user, isAdmin } = useAuth()
+    const { user, isAdmin, isVendedor, isBodeguero, isAuditor } = useAuth()
     const handleLogout = useLogout()
 
     const iniciales = useMemo(
@@ -29,18 +29,24 @@ export default function AdminLayout() {
                 </div>
 
                 <nav className="sidebar-nav">
-                    <NavLink to="/admin" end className={navClass}>
-                        <LayoutDashboard size={18} /> Dashboard
-                    </NavLink>
+                    {!isBodeguero && (
+                        <NavLink to="/admin" end className={navClass}>
+                            <LayoutDashboard size={18} /> Dashboard
+                        </NavLink>
+                    )}
                     <NavLink to="/admin/inventario" className={navClass}>
                         <Package size={18} /> Inventario
                     </NavLink>
-                    <NavLink to="/admin/ventas" className={navClass}>
-                        <ShoppingCart size={18} /> Ventas
-                    </NavLink>
-                    <NavLink to="/admin/ordenes" className={navClass}>
-                        <Truck size={18} /> Órdenes
-                    </NavLink>
+                    {(isAdmin || isVendedor) && (
+                        <NavLink to="/admin/ventas" className={navClass}>
+                            <ShoppingCart size={18} /> Ventas
+                        </NavLink>
+                    )}
+                    {!isAuditor && (
+                        <NavLink to="/admin/ordenes" className={navClass}>
+                            <Truck size={18} /> Órdenes
+                        </NavLink>
+                    )}
                     {isAdmin && (
                         <NavLink to="/admin/empleados" className={navClass}>
                             <Users size={18} /> Empleados

@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET /api/productos/stock-bajo
-router.get('/stock-bajo', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res) => {
+router.get('/stock-bajo', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero', 'auditor'), async (req, res) => {
   try {
     const productos = await repo.getStockBajo();
     res.json(productos);
@@ -39,7 +39,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/productos
-router.post('/', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res) => {
+router.post('/', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero'), async (req, res) => {
   try {
     const existe = await repo.getBySku(req.body.sku);
     if (existe) return res.status(409).json({ error: 'El SKU ya existe' });
@@ -53,7 +53,7 @@ router.post('/', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res
 });
 
 // PUT /api/productos/:id
-router.put('/:id', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res) => {
+router.put('/:id', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero'), async (req, res) => {
   try {
     const producto = await repo.update(req.params.id, req.body);
     if (!producto) return res.status(404).json({ error: 'Producto no encontrado' });

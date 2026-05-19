@@ -5,7 +5,7 @@ import { authMiddleware, roleGuard } from '../middlewares/auth.middleware.js';
 const router = express.Router();
 
 // GET /api/ordenes
-router.get('/', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res) => {
+router.get('/', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero'), async (req, res) => {
   try {
     const ordenes = await repo.getAll();
     res.json(ordenes);
@@ -16,7 +16,7 @@ router.get('/', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res)
 });
 
 // GET /api/ordenes/:id
-router.get('/:id', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res) => {
+router.get('/:id', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero'), async (req, res) => {
   try {
     const orden = await repo.getById(req.params.id);
     if (!orden) return res.status(404).json({ error: 'Orden no encontrada' });
@@ -30,7 +30,7 @@ router.get('/:id', authMiddleware, roleGuard('admin', 'vendedor'), async (req, r
 });
 
 // POST /api/ordenes
-router.post('/', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res) => {
+router.post('/', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero'), async (req, res) => {
   try {
     const { id_proveedor, id_empleado, items } = req.body;
 
@@ -50,7 +50,7 @@ router.post('/', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res
 });
 
 // PATCH /api/ordenes/:id/recibir
-router.patch('/:id/recibir', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res) => {
+router.patch('/:id/recibir', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero'), async (req, res) => {
   try {
     const orden = await repo.recibirOrden(req.params.id);
     res.json(orden);
@@ -63,7 +63,7 @@ router.patch('/:id/recibir', authMiddleware, roleGuard('admin', 'vendedor'), asy
   }
 });
 
-router.delete('/:id', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res) => {
+router.delete('/:id', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero'), async (req, res) => {
   try {
     const orden = await repo.cancelarOrden(req.params.id)
     if (!orden) return res.status(404).json({ error: 'Orden no encontrada o ya fue recibida' })
