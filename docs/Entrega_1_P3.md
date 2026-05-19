@@ -1,5 +1,7 @@
 # ElectroStore — Proyecto 3
 
+**Repositorio:** https://github.com/IvanaFD/Electrostore-/tree/proyecto-3-BD
+
 Extensión del Proyecto 2 con seguridad a nivel de base de datos: roles y permisos con `CREATE ROLE` / `GRANT` / `REVOKE`, stored procedures y ORM (Sequelize).
 
 ## Levantar el proyecto
