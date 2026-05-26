@@ -7,7 +7,7 @@ const router = express.Router();
 // GET /api/productos 
 router.get('/', async (req, res) => {
   try {
-    const productos = await repo.getAll();
+    const productos = await repo.getAll(req.user?.rol);
     res.json(productos);
   } catch (err) {
     console.error(err);
@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
 // GET /api/productos/stock-bajo
 router.get('/stock-bajo', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero', 'auditor'), async (req, res) => {
   try {
-    const productos = await repo.getStockBajo();
+    const productos = await repo.getStockBajo(req.user.rol);
     res.json(productos);
   } catch (err) {
     console.error(err);
@@ -29,7 +29,7 @@ router.get('/stock-bajo', authMiddleware, roleGuard('admin', 'vendedor', 'bodegu
 // GET /api/productos/:id
 router.get('/:id', async (req, res) => {
   try {
-    const producto = await repo.getById(req.params.id);
+    const producto = await repo.getById(req.user?.rol, req.params.id);
     if (!producto) return res.status(404).json({ error: 'Producto no encontrado' });
     res.json(producto);
   } catch (err) {
@@ -39,12 +39,12 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/productos
-router.post('/', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero'), async (req, res) => {
+router.post('/', authMiddleware, roleGuard('admin', 'bodeguero'), async (req, res) => {
   try {
-    const existe = await repo.getBySku(req.body.sku);
+    const existe = await repo.getBySku(req.user.rol, req.body.sku);
     if (existe) return res.status(409).json({ error: 'El SKU ya existe' });
 
-    const producto = await repo.create(req.body);
+    const producto = await repo.create(req.user.rol, req.body);
     res.status(201).json(producto);
   } catch (err) {
     console.error(err);
@@ -53,9 +53,9 @@ router.post('/', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero'), as
 });
 
 // PUT /api/productos/:id
-router.put('/:id', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero'), async (req, res) => {
+router.put('/:id', authMiddleware, roleGuard('admin', 'bodeguero'), async (req, res) => {
   try {
-    const producto = await repo.update(req.params.id, req.body);
+    const producto = await repo.update(req.user.rol, req.params.id, req.body);
     if (!producto) return res.status(404).json({ error: 'Producto no encontrado' });
     res.json(producto);
   } catch (err) {
@@ -67,7 +67,7 @@ router.put('/:id', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero'), 
 // DELETE /api/productos/:id
 router.delete('/:id', authMiddleware, roleGuard('admin'), async (req, res) => {
   try {
-    const producto = await repo.remove(req.params.id)
+    const producto = await repo.remove(req.user.rol, req.params.id)
     if (!producto) return res.status(404).json({ error: 'Producto no encontrado' })
     res.json({ message: 'Producto eliminado correctamente' })
   } catch (err) {

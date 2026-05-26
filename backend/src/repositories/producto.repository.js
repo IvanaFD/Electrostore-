@@ -1,7 +1,7 @@
-import pool from '../config/db.js';
+import { queryWithRole } from '../config/db.js';
 
-export const getAll = async () => {
-  const result = await pool.query(`
+export const getAll = async (rol) => {
+  const result = await queryWithRole(rol, `
     SELECT p.*, c.nombre AS categoria, pr.nombre AS proveedor
     FROM Producto p
     JOIN Categoria c ON p.id_categoria = c.id_categoria
@@ -11,8 +11,8 @@ export const getAll = async () => {
   return result.rows;
 };
 
-export const getById = async (id) => {
-  const result = await pool.query(`
+export const getById = async (rol, id) => {
+  const result = await queryWithRole(rol, `
     SELECT p.*, c.nombre AS categoria, pr.nombre AS proveedor
     FROM Producto p
     JOIN Categoria c ON p.id_categoria = c.id_categoria
@@ -22,16 +22,13 @@ export const getById = async (id) => {
   return result.rows[0];
 };
 
-export const getBySku = async (sku) => {
-  const result = await pool.query(
-    'SELECT * FROM Producto WHERE sku = $1',
-    [sku]
-  );
+export const getBySku = async (rol, sku) => {
+  const result = await queryWithRole(rol, `SELECT * FROM Producto WHERE sku = $1`, [sku]);
   return result.rows[0];
 };
 
-export const getByCategoria = async (id_categoria) => {
-  const result = await pool.query(`
+export const getByCategoria = async (rol, id_categoria) => {
+  const result = await queryWithRole(rol, `
     SELECT p.*, c.nombre AS categoria, pr.nombre AS proveedor
     FROM Producto p
     JOIN Categoria c ON p.id_categoria = c.id_categoria
@@ -42,8 +39,8 @@ export const getByCategoria = async (id_categoria) => {
   return result.rows;
 };
 
-export const getStockBajo = async () => {
-  const result = await pool.query(`
+export const getStockBajo = async (rol) => {
+  const result = await queryWithRole(rol, `
     SELECT p.*, c.nombre AS categoria
     FROM Producto p
     JOIN Categoria c ON p.id_categoria = c.id_categoria
@@ -53,8 +50,8 @@ export const getStockBajo = async () => {
   return result.rows;
 };
 
-export const create = async ({ sku, nombre, marca, precio_venta, precio_costo, stock_actual, stock_minimo, descripcion, imagen_url, id_categoria, id_proveedor }) => {
-  const result = await pool.query(`
+export const create = async (rol, { sku, nombre, marca, precio_venta, precio_costo, stock_actual, stock_minimo, descripcion, imagen_url, id_categoria, id_proveedor }) => {
+  const result = await queryWithRole(rol, `
     INSERT INTO Producto (sku, nombre, marca, precio_venta, precio_costo, stock_actual, stock_minimo, descripcion, imagen_url, id_categoria, id_proveedor)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
     RETURNING *
@@ -62,8 +59,8 @@ export const create = async ({ sku, nombre, marca, precio_venta, precio_costo, s
   return result.rows[0];
 };
 
-export const update = async (id, { nombre, marca, precio_venta, precio_costo, stock_actual, stock_minimo, descripcion, imagen_url, id_categoria, id_proveedor }) => {
-  const result = await pool.query(`
+export const update = async (rol, id, { nombre, marca, precio_venta, precio_costo, stock_actual, stock_minimo, descripcion, imagen_url, id_categoria, id_proveedor }) => {
+  const result = await queryWithRole(rol, `
     UPDATE Producto SET
       nombre = $1, marca = $2, precio_venta = $3, precio_costo = $4,
       stock_actual = $5, stock_minimo = $6, descripcion = $7,
@@ -74,10 +71,7 @@ export const update = async (id, { nombre, marca, precio_venta, precio_costo, st
   return result.rows[0];
 };
 
-export const remove = async (id) => {
-  const result = await pool.query(
-    'DELETE FROM Producto WHERE id_producto = $1 RETURNING *',
-    [id]
-  );
+export const remove = async (rol, id) => {
+  const result = await queryWithRole(rol, `DELETE FROM Producto WHERE id_producto = $1 RETURNING *`, [id]);
   return result.rows[0];
 };

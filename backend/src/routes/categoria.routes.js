@@ -7,7 +7,7 @@ const router = express.Router();
 // GET /api/categorias
 router.get('/', async (req, res) => {
   try {
-    const categorias = await repo.getAll();
+    const categorias = await repo.getAll(req.user?.rol);
     res.json(categorias);
   } catch (err) {
     console.error(err);
@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
 // GET /api/categorias/:id
 router.get('/:id', async (req, res) => {
   try {
-    const categoria = await repo.getById(req.params.id);
+    const categoria = await repo.getById(req.user?.rol, req.params.id);
     if (!categoria) return res.status(404).json({ error: 'Categoria no encontrada' });
     res.json(categoria);
   } catch (err) {
@@ -30,7 +30,7 @@ router.get('/:id', async (req, res) => {
 // POST /api/categorias
 router.post('/', authMiddleware, roleGuard('admin'), async (req, res) => {
   try {
-    const categoria = await repo.create(req.body);
+    const categoria = await repo.create(req.user.rol, req.body);
     res.status(201).json(categoria);
   } catch (err) {
     console.error(err);
@@ -41,7 +41,7 @@ router.post('/', authMiddleware, roleGuard('admin'), async (req, res) => {
 // PUT /api/categorias/:id
 router.put('/:id', authMiddleware, roleGuard('admin'), async (req, res) => {
   try {
-    const categoria = await repo.update(req.params.id, req.body);
+    const categoria = await repo.update(req.user.rol, req.params.id, req.body);
     if (!categoria) return res.status(404).json({ error: 'Categoria no encontrada' });
     res.json(categoria);
   } catch (err) {
@@ -53,7 +53,7 @@ router.put('/:id', authMiddleware, roleGuard('admin'), async (req, res) => {
 // DELETE /api/categorias/:id
 router.delete('/:id', authMiddleware, roleGuard('admin'), async (req, res) => {
   try {
-    const categoria = await repo.remove(req.params.id);
+    const categoria = await repo.remove(req.user.rol, req.params.id);
     if (!categoria) return res.status(404).json({ error: 'Categoria no encontrada' });
     res.json({ message: 'Categoria eliminada correctamente' });
   } catch (err) {

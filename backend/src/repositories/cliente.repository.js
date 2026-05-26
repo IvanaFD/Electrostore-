@@ -1,7 +1,7 @@
-import pool from '../config/db.js';
+import { queryWithRole } from '../config/db.js';
 
-export const getAll = async () => {
-  const result = await pool.query(`
+export const getAll = async (rol) => {
+  const result = await queryWithRole(rol, `
     SELECT c.*, u.username, u.rol
     FROM Cliente c
     LEFT JOIN Usuario u ON c.id_usuario = u.id_usuario
@@ -10,8 +10,8 @@ export const getAll = async () => {
   return result.rows;
 };
 
-export const getById = async (id) => {
-  const result = await pool.query(`
+export const getById = async (rol, id) => {
+  const result = await queryWithRole(rol, `
     SELECT c.*, u.username, u.rol
     FROM Cliente c
     LEFT JOIN Usuario u ON c.id_usuario = u.id_usuario
@@ -20,16 +20,16 @@ export const getById = async (id) => {
   return result.rows[0];
 };
 
-export const getByUsuario = async (id_usuario) => {
-  const result = await pool.query(
+export const getByUsuario = async (rol, id_usuario) => {
+  const result = await queryWithRole(rol,
     'SELECT * FROM Cliente WHERE id_usuario = $1',
     [id_usuario]
   );
   return result.rows[0];
 };
 
-export const create = async ({ nombre, apellido, email, telefono, direccion, id_usuario = null }) => {
-  const result = await pool.query(`
+export const create = async (rol, { nombre, apellido, email, telefono, direccion, id_usuario = null }) => {
+  const result = await queryWithRole(rol, `
     INSERT INTO Cliente (nombre, apellido, email, telefono, direccion, id_usuario)
     VALUES ($1, $2, $3, $4, $5, $6)
     RETURNING *
@@ -37,8 +37,8 @@ export const create = async ({ nombre, apellido, email, telefono, direccion, id_
   return result.rows[0];
 };
 
-export const update = async (id, { nombre, apellido, email, telefono, direccion }) => {
-  const result = await pool.query(`
+export const update = async (rol, id, { nombre, apellido, email, telefono, direccion }) => {
+  const result = await queryWithRole(rol, `
     UPDATE Cliente SET
       nombre = $1, apellido = $2, email = $3,
       telefono = $4, direccion = $5
@@ -48,8 +48,8 @@ export const update = async (id, { nombre, apellido, email, telefono, direccion 
   return result.rows[0];
 };
 
-export const remove = async (id) => {
-  const result = await pool.query(
+export const remove = async (rol, id) => {
+  const result = await queryWithRole(rol,
     'DELETE FROM Cliente WHERE id_cliente = $1 RETURNING *',
     [id]
   );

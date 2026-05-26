@@ -1,7 +1,7 @@
-import pool from '../config/db.js';
+import pool, { queryWithRole, DB_ROLE_MAP } from '../config/db.js';
 
-export const getAll = async () => {
-  const result = await pool.query(`
+export const getAll = async (rol) => {
+  const result = await queryWithRole(rol, `
     SELECT o.*,
       p.nombre AS proveedor,
       e.nombre || ' ' || e.apellido AS empleado
@@ -13,8 +13,8 @@ export const getAll = async () => {
   return result.rows;
 };
 
-export const getById = async (id) => {
-  const result = await pool.query(`
+export const getById = async (rol, id) => {
+  const result = await queryWithRole(rol, `
     SELECT o.*,
       p.nombre AS proveedor,
       e.nombre || ' ' || e.apellido AS empleado
@@ -26,8 +26,8 @@ export const getById = async (id) => {
   return result.rows[0];
 };
 
-export const getDetalle = async (id_orden) => {
-  const result = await pool.query(`
+export const getDetalle = async (rol, id_orden) => {
+  const result = await queryWithRole(rol, `
     SELECT d.*, p.nombre AS producto, p.sku
     FROM DetalleOrden d
     JOIN Producto p ON d.id_producto = p.id_producto
@@ -36,9 +36,14 @@ export const getDetalle = async (id_orden) => {
   return result.rows;
 };
 
-export const create = async (id_proveedor, id_empleado, items) => {
+export const create = async (rol, id_proveedor, id_empleado, items) => {
+  const dbRole = DB_ROLE_MAP[rol];
   const client = await pool.connect();
   try {
+    if (dbRole) {
+      await client.query(`SET ROLE ${dbRole}`);
+      await client.query(`SET search_path TO public`);
+    }
     await client.query('BEGIN');
 
     const ordenResult = await client.query(`
@@ -55,9 +60,7 @@ export const create = async (id_proveedor, id_empleado, items) => {
         [item.id_producto]
       );
 
-      if (productoResult.rows.length === 0) {
-        throw new Error(`Producto ${item.id_producto} no encontrado`);
-      }
+      if (productoResult.rows.length === 0) throw new Error(`Producto ${item.id_producto} no encontrado`);
 
       await client.query(`
         INSERT INTO DetalleOrden (id_orden, id_producto, cantidad, precio_compra)
@@ -71,27 +74,26 @@ export const create = async (id_proveedor, id_empleado, items) => {
     await client.query('ROLLBACK');
     throw err;
   } finally {
+    await client.query('RESET ROLE').catch(() => {});
     client.release();
   }
 };
 
-export const recibirOrden = async (id_orden) => {
+export const recibirOrden = async (rol, id_orden) => {
+  const dbRole = DB_ROLE_MAP[rol];
   const client = await pool.connect();
   try {
+    if (dbRole) {
+      await client.query(`SET ROLE ${dbRole}`);
+      await client.query(`SET search_path TO public`);
+    }
     await client.query('BEGIN');
 
-    const orden = await client.query(
-      'SELECT * FROM OrdenCompra WHERE id_orden = $1',
-      [id_orden]
-    );
-
+    const orden = await client.query('SELECT * FROM OrdenCompra WHERE id_orden = $1', [id_orden]);
     if (!orden.rows[0]) throw new Error('Orden no encontrada');
     if (orden.rows[0].estado === 'recibida') throw new Error('La orden ya fue recibida');
 
-    const detalle = await client.query(
-      'SELECT * FROM DetalleOrden WHERE id_orden = $1',
-      [id_orden]
-    );
+    const detalle = await client.query('SELECT * FROM DetalleOrden WHERE id_orden = $1', [id_orden]);
 
     for (const item of detalle.rows) {
       await client.query(`
@@ -112,27 +114,37 @@ export const recibirOrden = async (id_orden) => {
     await client.query('ROLLBACK');
     throw err;
   } finally {
+    await client.query('RESET ROLE').catch(() => {});
     client.release();
   }
 };
 
-export const cancelarOrden = async (id) => {
-  const client = await pool.connect()
+export const cancelarOrden = async (rol, id) => {
+  const dbRole = DB_ROLE_MAP[rol];
+  const client = await pool.connect();
   try {
-    await client.query('BEGIN')
+    if (dbRole) {
+      await client.query(`SET ROLE ${dbRole}`);
+      await client.query(`SET search_path TO public`);
+    }
+    await client.query('BEGIN');
+
     const orden = await client.query(
       'SELECT * FROM OrdenCompra WHERE id_orden = $1 AND estado = $2',
       [id, 'pendiente']
-    )
-    if (!orden.rows[0]) return null
-    await client.query('DELETE FROM DetalleOrden WHERE id_orden = $1', [id])
-    await client.query('DELETE FROM OrdenCompra WHERE id_orden = $1', [id])
-    await client.query('COMMIT')
-    return orden.rows[0]
+    );
+    if (!orden.rows[0]) return null;
+
+    await client.query('DELETE FROM DetalleOrden WHERE id_orden = $1', [id]);
+    await client.query('DELETE FROM OrdenCompra WHERE id_orden = $1', [id]);
+
+    await client.query('COMMIT');
+    return orden.rows[0];
   } catch (err) {
-    await client.query('ROLLBACK')
-    throw err
+    await client.query('ROLLBACK');
+    throw err;
   } finally {
-    client.release()
+    await client.query('RESET ROLE').catch(() => {});
+    client.release();
   }
-}
+};

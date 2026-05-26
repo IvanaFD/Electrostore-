@@ -1,6 +1,5 @@
-import pool from '../config/db.js';
+import pool, { queryWithRole } from '../config/db.js';
 
-// VIEW - productos con stock bajo 
 export const createView = async () => {
   await pool.query(`
     CREATE OR REPLACE VIEW vista_stock_bajo AS
@@ -12,16 +11,18 @@ export const createView = async () => {
     WHERE p.stock_actual <= p.stock_minimo
     ORDER BY p.stock_actual ASC
   `);
+  await pool.query(`
+    GRANT SELECT ON vista_stock_bajo TO rol_admin, rol_vendedor, rol_bodeguero, rol_auditor
+  `);
 };
 
-export const getStockBajo = async () => {
-  const result = await pool.query('SELECT * FROM vista_stock_bajo');
+export const getStockBajo = async (rol) => {
+  const result = await queryWithRole(rol, 'SELECT * FROM vista_stock_bajo');
   return result.rows;
 };
 
-// GROUP BY + HAVING + agregacion - productos mas vendidos 
-export const getProductosMasVendidos = async () => {
-  const result = await pool.query(`
+export const getProductosMasVendidos = async (rol) => {
+  const result = await queryWithRole(rol, `
     SELECT p.id_producto, p.nombre, p.sku, p.marca,
            c.nombre AS categoria,
            SUM(dv.cantidad) AS total_vendido,
@@ -39,9 +40,8 @@ export const getProductosMasVendidos = async () => {
   return result.rows;
 };
 
-// GROUP BY + agregacion - ventas por categoria
-export const getVentasPorCategoria = async () => {
-  const result = await pool.query(`
+export const getVentasPorCategoria = async (rol) => {
+  const result = await queryWithRole(rol, `
     SELECT c.nombre AS categoria,
            COUNT(DISTINCT v.id_venta) AS total_ventas,
            SUM(dv.cantidad) AS unidades_vendidas,
@@ -57,9 +57,8 @@ export const getVentasPorCategoria = async () => {
   return result.rows;
 };
 
-// CTE - reporte de ventas por periodo 
-export const getVentasPorPeriodo = async (fecha_inicio, fecha_fin) => {
-  const result = await pool.query(`
+export const getVentasPorPeriodo = async (rol, fecha_inicio, fecha_fin) => {
+  const result = await queryWithRole(rol, `
     WITH ventas_periodo AS (
       SELECT v.id_venta, v.fecha_venta, v.total, v.estado,
              c.nombre || ' ' || c.apellido AS cliente,
@@ -79,9 +78,8 @@ export const getVentasPorPeriodo = async (fecha_inicio, fecha_fin) => {
   return result.rows;
 };
 
-// SUBQUERY con IN - clientes que han comprado al menos una vez
-export const getClientesConCompras = async () => {
-  const result = await pool.query(`
+export const getClientesConCompras = async (rol) => {
+  const result = await queryWithRole(rol, `
     SELECT c.id_cliente, c.nombre, c.apellido, c.email, c.telefono,
            COUNT(v.id_venta) AS total_compras,
            SUM(v.total) AS total_gastado
@@ -96,9 +94,8 @@ export const getClientesConCompras = async () => {
   return result.rows;
 };
 
-// SUBQUERY con EXISTS - productos que nunca se han vendido
-export const getProductosSinVentas = async () => {
-  const result = await pool.query(`
+export const getProductosSinVentas = async (rol) => {
+  const result = await queryWithRole(rol, `
     SELECT p.id_producto, p.sku, p.nombre, p.marca,
            p.stock_actual, c.nombre AS categoria
     FROM Producto p
@@ -114,9 +111,8 @@ export const getProductosSinVentas = async () => {
   return result.rows;
 };
 
-// GROUP BY - ventas por empleado
-export const getVentasPorEmpleado = async () => {
-  const result = await pool.query(`
+export const getVentasPorEmpleado = async (rol) => {
+  const result = await queryWithRole(rol, `
     SELECT e.id_empleado,
            e.nombre || ' ' || e.apellido AS empleado,
            e.cargo,

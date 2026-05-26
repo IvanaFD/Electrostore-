@@ -7,7 +7,7 @@ const router = express.Router();
 // GET /api/clientes
 router.get('/', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async (req, res) => {
   try {
-    const clientes = await repo.getAll();
+    const clientes = await repo.getAll(req.user.rol);
     res.json(clientes);
   } catch (err) {
     console.error(err);
@@ -15,10 +15,10 @@ router.get('/', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async
   }
 });
 
-// GET /api/clientes/me 
+// GET /api/clientes/me
 router.get('/me', authMiddleware, roleGuard('cliente'), async (req, res) => {
   try {
-    const cliente = await repo.getByUsuario(req.user.id_usuario);
+    const cliente = await repo.getByUsuario(req.user.rol, req.user.id_usuario);
     if (!cliente) return res.status(404).json({ error: 'Perfil de cliente no encontrado' });
     res.json(cliente);
   } catch (err) {
@@ -30,7 +30,7 @@ router.get('/me', authMiddleware, roleGuard('cliente'), async (req, res) => {
 // GET /api/clientes/:id
 router.get('/:id', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async (req, res) => {
   try {
-    const cliente = await repo.getById(req.params.id);
+    const cliente = await repo.getById(req.user.rol, req.params.id);
     if (!cliente) return res.status(404).json({ error: 'Cliente no encontrado' });
     res.json(cliente);
   } catch (err) {
@@ -42,7 +42,7 @@ router.get('/:id', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), as
 // POST /api/clientes
 router.post('/', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async (req, res) => {
   try {
-    const cliente = await repo.create(req.body);
+    const cliente = await repo.create(req.user.rol, req.body);
     res.status(201).json(cliente);
   } catch (err) {
     if (err.code === '23505') {
@@ -56,7 +56,7 @@ router.post('/', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), asyn
 // PUT /api/clientes/:id
 router.put('/:id', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async (req, res) => {
   try {
-    const cliente = await repo.update(req.params.id, req.body);
+    const cliente = await repo.update(req.user.rol, req.params.id, req.body);
     if (!cliente) return res.status(404).json({ error: 'Cliente no encontrado' });
     res.json(cliente);
   } catch (err) {
@@ -68,7 +68,7 @@ router.put('/:id', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), as
 // DELETE /api/clientes/:id
 router.delete('/:id', authMiddleware, roleGuard('admin'), async (req, res) => {
   try {
-    const cliente = await repo.remove(req.params.id);
+    const cliente = await repo.remove(req.user.rol, req.params.id);
     if (!cliente) return res.status(404).json({ error: 'Cliente no encontrado' });
     res.json({ message: 'Cliente eliminado correctamente' });
   } catch (err) {
@@ -80,18 +80,18 @@ router.delete('/:id', authMiddleware, roleGuard('admin'), async (req, res) => {
 // PATCH /api/clientes/:id
 router.patch('/:id', authMiddleware, async (req, res) => {
   try {
-    const cliente = await repo.getById(req.params.id);
+    const cliente = await repo.getById(req.user.rol, req.params.id);
     if (!cliente) return res.status(404).json({ error: 'Cliente no encontrado' });
 
     // Si es cliente, solo puede modificarse a sí mismo
     if (req.user.rol === 'cliente') {
-      const miPerfil = await repo.getByUsuario(req.user.id_usuario);
+      const miPerfil = await repo.getByUsuario(req.user.rol, req.user.id_usuario);
       if (!miPerfil || miPerfil.id_cliente !== cliente.id_cliente) {
         return res.status(403).json({ error: 'No puedes modificar datos de otro cliente' });
       }
     }
 
-    const actualizado = await repo.update(req.params.id, {
+    const actualizado = await repo.update(req.user.rol, req.params.id, {
       nombre:    req.body.nombre    ?? cliente.nombre,
       apellido:  req.body.apellido  ?? cliente.apellido,
       email:     req.body.email     ?? cliente.email,

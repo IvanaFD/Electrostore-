@@ -4,10 +4,9 @@ import { authMiddleware, roleGuard } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
-// GET /api/ordenes
 router.get('/', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero'), async (req, res) => {
   try {
-    const ordenes = await repo.getAll();
+    const ordenes = await repo.getAll(req.user.rol);
     res.json(ordenes);
   } catch (err) {
     console.error(err);
@@ -15,13 +14,12 @@ router.get('/', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero'), asy
   }
 });
 
-// GET /api/ordenes/:id
 router.get('/:id', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero'), async (req, res) => {
   try {
-    const orden = await repo.getById(req.params.id);
+    const orden = await repo.getById(req.user.rol, req.params.id);
     if (!orden) return res.status(404).json({ error: 'Orden no encontrada' });
 
-    const detalle = await repo.getDetalle(req.params.id);
+    const detalle = await repo.getDetalle(req.user.rol, req.params.id);
     res.json({ ...orden, detalle });
   } catch (err) {
     console.error(err);
@@ -29,7 +27,6 @@ router.get('/:id', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero'), 
   }
 });
 
-// POST /api/ordenes
 router.post('/', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero'), async (req, res) => {
   try {
     const { id_proveedor, id_empleado, items } = req.body;
@@ -38,7 +35,7 @@ router.post('/', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero'), as
     if (!id_empleado) return res.status(400).json({ error: 'Empleado es requerido' });
     if (!items || items.length === 0) return res.status(400).json({ error: 'Debe incluir al menos un producto' });
 
-    const orden = await repo.create(id_proveedor, id_empleado, items);
+    const orden = await repo.create(req.user.rol, id_proveedor, id_empleado, items);
     res.status(201).json(orden);
   } catch (err) {
     if (err.message.includes('no encontrado')) {
@@ -49,10 +46,9 @@ router.post('/', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero'), as
   }
 });
 
-// PATCH /api/ordenes/:id/recibir
 router.patch('/:id/recibir', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero'), async (req, res) => {
   try {
-    const orden = await repo.recibirOrden(req.params.id);
+    const orden = await repo.recibirOrden(req.user.rol, req.params.id);
     res.json(orden);
   } catch (err) {
     if (err.message.includes('recibida') || err.message.includes('no encontrada')) {
@@ -65,13 +61,13 @@ router.patch('/:id/recibir', authMiddleware, roleGuard('admin', 'vendedor', 'bod
 
 router.delete('/:id', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero'), async (req, res) => {
   try {
-    const orden = await repo.cancelarOrden(req.params.id)
-    if (!orden) return res.status(404).json({ error: 'Orden no encontrada o ya fue recibida' })
-    res.json({ message: 'Orden cancelada correctamente' })
+    const orden = await repo.cancelarOrden(req.user.rol, req.params.id);
+    if (!orden) return res.status(404).json({ error: 'Orden no encontrada o ya fue recibida' });
+    res.json({ message: 'Orden cancelada correctamente' });
   } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Error al cancelar orden' })
+    console.error(err);
+    res.status(500).json({ error: 'Error al cancelar orden' });
   }
-})
+});
 
 export default router;

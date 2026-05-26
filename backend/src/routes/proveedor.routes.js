@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.get('/', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero', 'auditor'), async (req, res) => {
   try {
-    const proveedores = await repo.getAll();
+    const proveedores = await repo.getAll(req.user.rol);
     res.json(proveedores);
   } catch (err) {
     console.error(err);
@@ -16,7 +16,7 @@ router.get('/', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero', 'aud
 
 router.get('/:id', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero', 'auditor'), async (req, res) => {
   try {
-    const proveedor = await repo.getById(req.params.id);
+    const proveedor = await repo.getById(req.user.rol, req.params.id);
     if (!proveedor) return res.status(404).json({ error: 'Proveedor no encontrado' });
     res.json(proveedor);
   } catch (err) {
@@ -27,7 +27,7 @@ router.get('/:id', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero', '
 
 router.post('/', authMiddleware, roleGuard('admin'), async (req, res) => {
   try {
-    const proveedor = await repo.create(req.body);
+    const proveedor = await repo.create(req.user.rol, req.body);
     res.status(201).json(proveedor);
   } catch (err) {
     console.error(err);
@@ -37,7 +37,7 @@ router.post('/', authMiddleware, roleGuard('admin'), async (req, res) => {
 
 router.put('/:id', authMiddleware, roleGuard('admin'), async (req, res) => {
   try {
-    const proveedor = await repo.update(req.params.id, req.body);
+    const proveedor = await repo.update(req.user.rol, req.params.id, req.body);
     if (!proveedor) return res.status(404).json({ error: 'Proveedor no encontrado' });
     res.json(proveedor);
   } catch (err) {
@@ -48,7 +48,7 @@ router.put('/:id', authMiddleware, roleGuard('admin'), async (req, res) => {
 
 router.delete('/:id', authMiddleware, roleGuard('admin'), async (req, res) => {
   try {
-    const proveedor = await repo.remove(req.params.id);
+    const proveedor = await repo.remove(req.user.rol, req.params.id);
     if (!proveedor) return res.status(404).json({ error: 'Proveedor no encontrado' });
     res.json({ message: 'Proveedor eliminado correctamente' });
   } catch (err) {

@@ -4,13 +4,13 @@ import { authMiddleware, roleGuard } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
-// Crear view al iniciar 
+// Crear view al iniciar
 repo.createView().catch(console.error);
 
 // GET /api/reportes/stock-bajo - usa VIEW
 router.get('/stock-bajo', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async (req, res) => {
   try {
-    const data = await repo.getStockBajo();
+    const data = await repo.getStockBajo(req.user.rol);
     res.json(data);
   } catch (err) {
     console.error(err);
@@ -21,7 +21,7 @@ router.get('/stock-bajo', authMiddleware, roleGuard('admin', 'vendedor', 'audito
 // GET /api/reportes/productos-mas-vendidos - GROUP BY + HAVING
 router.get('/productos-mas-vendidos', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async (req, res) => {
   try {
-    const data = await repo.getProductosMasVendidos();
+    const data = await repo.getProductosMasVendidos(req.user.rol);
     res.json(data);
   } catch (err) {
     console.error(err);
@@ -32,7 +32,7 @@ router.get('/productos-mas-vendidos', authMiddleware, roleGuard('admin', 'vended
 // GET /api/reportes/ventas-por-categoria - GROUP BY + agregacion
 router.get('/ventas-por-categoria', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async (req, res) => {
   try {
-    const data = await repo.getVentasPorCategoria();
+    const data = await repo.getVentasPorCategoria(req.user.rol);
     res.json(data);
   } catch (err) {
     console.error(err);
@@ -47,7 +47,7 @@ router.get('/ventas-por-periodo', authMiddleware, roleGuard('admin', 'vendedor',
     if (!fecha_inicio || !fecha_fin) {
       return res.status(400).json({ error: 'fecha_inicio y fecha_fin son requeridas' });
     }
-    const data = await repo.getVentasPorPeriodo(fecha_inicio, fecha_fin);
+    const data = await repo.getVentasPorPeriodo(req.user.rol, fecha_inicio, fecha_fin);
     res.json(data);
   } catch (err) {
     console.error(err);
@@ -58,7 +58,7 @@ router.get('/ventas-por-periodo', authMiddleware, roleGuard('admin', 'vendedor',
 // GET /api/reportes/clientes-con-compras - SUBQUERY IN
 router.get('/clientes-con-compras', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async (req, res) => {
   try {
-    const data = await repo.getClientesConCompras();
+    const data = await repo.getClientesConCompras(req.user.rol);
     res.json(data);
   } catch (err) {
     console.error(err);
@@ -69,7 +69,7 @@ router.get('/clientes-con-compras', authMiddleware, roleGuard('admin', 'vendedor
 // GET /api/reportes/productos-sin-ventas - SUBQUERY EXISTS
 router.get('/productos-sin-ventas', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async (req, res) => {
   try {
-    const data = await repo.getProductosSinVentas();
+    const data = await repo.getProductosSinVentas(req.user.rol);
     res.json(data);
   } catch (err) {
     console.error(err);
@@ -80,7 +80,7 @@ router.get('/productos-sin-ventas', authMiddleware, roleGuard('admin', 'vendedor
 // GET /api/reportes/ventas-por-empleado - GROUP BY
 router.get('/ventas-por-empleado', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async (req, res) => {
   try {
-    const data = await repo.getVentasPorEmpleado();
+    const data = await repo.getVentasPorEmpleado(req.user.rol);
     res.json(data);
   } catch (err) {
     console.error(err);
@@ -88,49 +88,50 @@ router.get('/ventas-por-empleado', authMiddleware, roleGuard('admin', 'vendedor'
   }
 });
 
-// GET /api/reportes/ exportar-csv?tipo =
+// GET /api/reportes/exportar-csv?tipo=
 router.get('/exportar-csv', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async (req, res) => {
   try {
-    const tipo = req.query.tipo || 'productos-mas-vendidos'
-    let data = []
-    let headers = []
+    const tipo = req.query.tipo || 'productos-mas-vendidos';
+    const rol = req.user.rol;
+    let data = [];
+    let headers = [];
 
     if (tipo === 'productos-mas-vendidos') {
-      data = await repo.getProductosMasVendidos()
-      headers = ['id_producto', 'nombre', 'sku', 'marca', 'categoria', 'total_vendido', 'total_ingresos']
+      data = await repo.getProductosMasVendidos(rol);
+      headers = ['id_producto', 'nombre', 'sku', 'marca', 'categoria', 'total_vendido', 'total_ingresos'];
     } else if (tipo === 'ventas-por-categoria') {
-      data = await repo.getVentasPorCategoria()
-      headers = ['categoria', 'total_ventas', 'unidades_vendidas', 'total_ingresos']
+      data = await repo.getVentasPorCategoria(rol);
+      headers = ['categoria', 'total_ventas', 'unidades_vendidas', 'total_ingresos'];
     } else if (tipo === 'clientes-con-compras') {
-      data = await repo.getClientesConCompras()
-      headers = ['id_cliente', 'nombre', 'apellido', 'email', 'telefono', 'total_compras', 'total_gastado']
+      data = await repo.getClientesConCompras(rol);
+      headers = ['id_cliente', 'nombre', 'apellido', 'email', 'telefono', 'total_compras', 'total_gastado'];
     } else if (tipo === 'stock-bajo') {
-      data = await repo.getStockBajo()
-      headers = ['id_producto', 'sku', 'nombre', 'marca', 'stock_actual', 'stock_minimo', 'categoria']
+      data = await repo.getStockBajo(rol);
+      headers = ['id_producto', 'sku', 'nombre', 'marca', 'stock_actual', 'stock_minimo', 'categoria'];
     } else if (tipo === 'ventas-por-empleado') {
-      data = await repo.getVentasPorEmpleado()
-      headers = ['id_empleado', 'empleado', 'cargo', 'total_ventas', 'total_ingresos']
+      data = await repo.getVentasPorEmpleado(rol);
+      headers = ['id_empleado', 'empleado', 'cargo', 'total_ventas', 'total_ingresos'];
     } else if (tipo === 'productos-sin-ventas') {
-      data = await repo.getProductosSinVentas()
-      headers = ['sku', 'nombre', 'marca', 'stock_actual', 'categoria']
+      data = await repo.getProductosSinVentas(rol);
+      headers = ['sku', 'nombre', 'marca', 'stock_actual', 'categoria'];
     } else if (tipo === 'ventas-por-periodo') {
-      const { fecha_inicio, fecha_fin } = req.query
-      data = await repo.getVentasPorPeriodo(fecha_inicio, fecha_fin)
-      headers = ['id_venta', 'fecha_venta', 'cliente', 'empleado', 'total', 'estado']
+      const { fecha_inicio, fecha_fin } = req.query;
+      data = await repo.getVentasPorPeriodo(rol, fecha_inicio, fecha_fin);
+      headers = ['id_venta', 'fecha_venta', 'cliente', 'empleado', 'total', 'estado'];
     }
 
     const csv = [
       headers.join(','),
       ...data.map(row => headers.map(h => `"${row[h] ?? ''}"`).join(','))
-    ].join('\n')
+    ].join('\n');
 
-    res.setHeader('Content-Type', 'text/csv')
-    res.setHeader('Content-Disposition', `attachment; filename="${tipo}.csv"`)
-    res.send('\uFEFF' + csv)  
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${tipo}.csv"`);
+    res.send('﻿' + csv);
   } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Error al exportar' })
+    console.error(err);
+    res.status(500).json({ error: 'Error al exportar' });
   }
-})
+});
 
 export default router;

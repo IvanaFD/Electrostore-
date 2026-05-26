@@ -11,7 +11,7 @@ const pool = new Pool({
   database: process.env.DB_NAME,
 });
 
-const DB_ROLE_MAP = {
+export const DB_ROLE_MAP = {
   admin:     'rol_admin',
   vendedor:  'rol_vendedor',
   cliente:   'rol_cliente',
@@ -23,7 +23,10 @@ export async function queryWithRole(userRol, sql, params = []) {
   const dbRole = DB_ROLE_MAP[userRol];
   const client = await pool.connect();
   try {
-    if (dbRole) await client.query(`SET ROLE ${dbRole}`);
+    if (dbRole) {
+      await client.query(`SET ROLE ${dbRole}`);
+      await client.query(`SET search_path TO public`);
+    }
     const result = await client.query(sql, params);
     return result;
   } finally {

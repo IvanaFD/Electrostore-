@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.get('/', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero', 'auditor'), async (req, res) => {
   try {
-    const empleados = await repo.getAll();
+    const empleados = await repo.getAll(req.user.rol);
     res.json(empleados);
   } catch (err) {
     console.error(err);
@@ -16,7 +16,7 @@ router.get('/', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero', 'aud
 
 router.get('/:id', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero', 'auditor'), async (req, res) => {
   try {
-    const empleado = await repo.getById(req.params.id);
+    const empleado = await repo.getById(req.user.rol, req.params.id);
     if (!empleado) return res.status(404).json({ error: 'Empleado no encontrado' });
     res.json(empleado);
   } catch (err) {
@@ -27,7 +27,7 @@ router.get('/:id', authMiddleware, roleGuard('admin', 'vendedor', 'bodeguero', '
 
 router.post('/', authMiddleware, roleGuard('admin'), async (req, res) => {
   try {
-    const empleado = await repo.create(req.body);
+    const empleado = await repo.create(req.user.rol, req.body);
     res.status(201).json(empleado);
   } catch (err) {
     if (err.code === '23505') {
@@ -43,7 +43,7 @@ router.post('/', authMiddleware, roleGuard('admin'), async (req, res) => {
 
 router.put('/:id', authMiddleware, roleGuard('admin'), async (req, res) => {
   try {
-    const empleado = await repo.update(req.params.id, req.body);
+    const empleado = await repo.update(req.user.rol, req.params.id, req.body);
     if (!empleado) return res.status(404).json({ error: 'Empleado no encontrado' });
     res.json(empleado);
   } catch (err) {
@@ -57,7 +57,7 @@ router.put('/:id', authMiddleware, roleGuard('admin'), async (req, res) => {
 
 router.delete('/:id', authMiddleware, roleGuard('admin'), async (req, res) => {
   try {
-    const empleado = await repo.remove(req.params.id);
+    const empleado = await repo.remove(req.user.rol, req.params.id);
     if (!empleado) return res.status(404).json({ error: 'Empleado no encontrado' });
     res.json({ message: 'Empleado eliminado correctamente' });
   } catch (err) {

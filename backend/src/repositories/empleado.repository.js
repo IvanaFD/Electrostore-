@@ -1,7 +1,7 @@
-import pool from '../config/db.js';
+import { queryWithRole } from '../config/db.js';
 
-export const getAll = async () => {
-  const result = await pool.query(`
+export const getAll = async (rol) => {
+  const result = await queryWithRole(rol, `
     SELECT e.*, u.username, u.rol
     FROM Empleado e
     LEFT JOIN Usuario u ON e.id_usuario = u.id_usuario
@@ -10,8 +10,8 @@ export const getAll = async () => {
   return result.rows;
 };
 
-export const getById = async (id) => {
-  const result = await pool.query(`
+export const getById = async (rol, id) => {
+  const result = await queryWithRole(rol, `
     SELECT e.*, u.username, u.rol
     FROM Empleado e
     LEFT JOIN Usuario u ON e.id_usuario = u.id_usuario
@@ -20,8 +20,8 @@ export const getById = async (id) => {
   return result.rows[0];
 };
 
-export const create = async ({ nombre, apellido, email, telefono, cargo }) => {
-  const result = await pool.query(`
+export const create = async (rol, { nombre, apellido, email, telefono, cargo }) => {
+  const result = await queryWithRole(rol, `
     INSERT INTO Empleado (nombre, apellido, email, telefono, cargo)
     VALUES ($1, $2, $3, $4, $5)
     RETURNING *
@@ -29,8 +29,8 @@ export const create = async ({ nombre, apellido, email, telefono, cargo }) => {
   return result.rows[0];
 };
 
-export const update = async (id, { nombre, apellido, email, telefono, cargo }) => {
-  const result = await pool.query(`
+export const update = async (rol, id, { nombre, apellido, email, telefono, cargo }) => {
+  const result = await queryWithRole(rol, `
     UPDATE Empleado SET
       nombre = $1, apellido = $2, email = $3,
       telefono = $4, cargo = $5
@@ -40,8 +40,8 @@ export const update = async (id, { nombre, apellido, email, telefono, cargo }) =
   return result.rows[0];
 };
 
-export const remove = async (id) => {
-  const result = await pool.query(
+export const remove = async (rol, id) => {
+  const result = await queryWithRole(rol,
     'DELETE FROM Empleado WHERE id_empleado = $1 RETURNING *',
     [id]
   );

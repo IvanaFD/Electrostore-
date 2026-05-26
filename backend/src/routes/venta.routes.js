@@ -5,10 +5,9 @@ import { authMiddleware, roleGuard } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
-// GET /api/ventas
 router.get('/', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async (req, res) => {
   try {
-    const ventas = await repo.getAll();
+    const ventas = await repo.getAll(req.user.rol);
     res.json(ventas);
   } catch (err) {
     console.error(err);
@@ -16,18 +15,17 @@ router.get('/', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async
   }
 });
 
-// GET /api/ventas/mis-compras - cliente ve sus propias compras
 router.get('/mis-compras', authMiddleware, roleGuard('cliente'), async (req, res) => {
   try {
-    const cliente = await getByUsuario(req.user.id_usuario);
+    const cliente = await getByUsuario(req.user.rol, req.user.id_usuario);
     if (!cliente) return res.status(404).json({ error: 'Perfil de cliente no encontrado' });
 
-    const ventas = await repo.getByCliente(cliente.id_cliente);
+    const ventas = await repo.getByCliente(req.user.rol, cliente.id_cliente);
 
     const ventasConDetalle = await Promise.all(
       ventas.map(async (v) => ({
         ...v,
-        detalle: await repo.getDetalle(v.id_venta)
+        detalle: await repo.getDetalle(req.user.rol, v.id_venta)
       }))
     );
 
@@ -38,13 +36,12 @@ router.get('/mis-compras', authMiddleware, roleGuard('cliente'), async (req, res
   }
 });
 
-// GET /api/ventas/:id
 router.get('/:id', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), async (req, res) => {
   try {
-    const venta = await repo.getById(req.params.id);
+    const venta = await repo.getById(req.user.rol, req.params.id);
     if (!venta) return res.status(404).json({ error: 'Venta no encontrada' });
 
-    const detalle = await repo.getDetalle(req.params.id);
+    const detalle = await repo.getDetalle(req.user.rol, req.params.id);
     res.json({ ...venta, detalle });
   } catch (err) {
     console.error(err);
@@ -52,14 +49,13 @@ router.get('/:id', authMiddleware, roleGuard('admin', 'vendedor', 'auditor'), as
   }
 });
 
-// POST /api/ventas - crear venta (admin, vendedor o cliente)
 router.post('/', authMiddleware, async (req, res) => {
   try {
     let { id_cliente, items } = req.body;
     let id_empleado = null;
 
     if (req.user.rol === 'cliente') {
-      const cliente = await getByUsuario(req.user.id_usuario);
+      const cliente = await getByUsuario(req.user.rol, req.user.id_usuario);
       if (!cliente) return res.status(404).json({ error: 'Perfil de cliente no encontrado' });
       id_cliente = cliente.id_cliente;
     } else {
@@ -69,7 +65,7 @@ router.post('/', authMiddleware, async (req, res) => {
     if (!id_cliente) return res.status(400).json({ error: 'Cliente es requerido' });
     if (!items || items.length === 0) return res.status(400).json({ error: 'Debe incluir al menos un producto' });
 
-    const venta = await repo.create(id_cliente, id_empleado, items);
+    const venta = await repo.create(req.user.rol, id_cliente, id_empleado, items);
     res.status(201).json(venta);
   } catch (err) {
     if (err.message.includes('Stock insuficiente') || err.message.includes('no encontrado')) {
@@ -80,10 +76,9 @@ router.post('/', authMiddleware, async (req, res) => {
   }
 });
 
-// PATCH /api/ventas/:id/cancelar
 router.patch('/:id/cancelar', authMiddleware, roleGuard('admin', 'vendedor'), async (req, res) => {
   try {
-    const venta = await repo.cancelar(req.params.id);
+    const venta = await repo.cancelar(req.user.rol, req.params.id);
     res.json(venta);
   } catch (err) {
     if (err.message.includes('cancelada') || err.message.includes('no encontrada')) {
