@@ -3,7 +3,7 @@
 -- ============================================================
 
 -- SP 1: Registrar venta completa con validación de stock
--- PROCEDURE con transacción explícita y ROLLBACK en caso de error
+-- PROCEDURE con transacción explícita: ROLLBACK si falla validación, COMMIT si todo ok
 CREATE OR REPLACE PROCEDURE sp_registrar_venta(
   IN p_id_cliente  INTEGER,
   IN p_id_empleado INTEGER,
@@ -33,10 +33,12 @@ BEGIN
     WHERE  id_producto = v_id_prod;
 
     IF NOT FOUND THEN
+      ROLLBACK;
       RAISE EXCEPTION 'Producto con id % no encontrado', v_id_prod;
     END IF;
 
     IF v_stock < v_cantidad THEN
+      ROLLBACK;
       RAISE EXCEPTION 'Stock insuficiente para producto % (disponible: %, solicitado: %)',
         v_id_prod, v_stock, v_cantidad;
     END IF;
@@ -68,16 +70,12 @@ BEGIN
   END LOOP;
 
   COMMIT;
-EXCEPTION
-  WHEN OTHERS THEN
-    ROLLBACK;
-    RAISE;
 END;
 $$;
 
 
 -- SP 2: Cancelar venta y restaurar stock
--- PROCEDURE con transacción explícita y ROLLBACK
+-- PROCEDURE con transacción explícita: ROLLBACK si no se puede cancelar, COMMIT si ok
 CREATE OR REPLACE PROCEDURE sp_cancelar_venta(IN p_id_venta INTEGER)
 LANGUAGE plpgsql AS $$
 DECLARE
@@ -87,10 +85,12 @@ BEGIN
   SELECT estado INTO v_estado FROM Venta WHERE id_venta = p_id_venta;
 
   IF NOT FOUND THEN
+    ROLLBACK;
     RAISE EXCEPTION 'Venta % no encontrada', p_id_venta;
   END IF;
 
   IF v_estado = 'cancelada' THEN
+    ROLLBACK;
     RAISE EXCEPTION 'La venta % ya está cancelada', p_id_venta;
   END IF;
 
@@ -106,16 +106,12 @@ BEGIN
   UPDATE Venta SET estado = 'cancelada' WHERE id_venta = p_id_venta;
 
   COMMIT;
-EXCEPTION
-  WHEN OTHERS THEN
-    ROLLBACK;
-    RAISE;
 END;
 $$;
 
 
 -- SP 3: Recibir orden de compra y actualizar stock de productos
--- PROCEDURE con transacción explícita y ROLLBACK
+-- PROCEDURE con transacción explícita: ROLLBACK si ya fue recibida, COMMIT si ok
 CREATE OR REPLACE PROCEDURE sp_recibir_orden(IN p_id_orden INTEGER)
 LANGUAGE plpgsql AS $$
 DECLARE
@@ -125,10 +121,12 @@ BEGIN
   SELECT estado INTO v_estado FROM OrdenCompra WHERE id_orden = p_id_orden;
 
   IF NOT FOUND THEN
+    ROLLBACK;
     RAISE EXCEPTION 'Orden de compra % no encontrada', p_id_orden;
   END IF;
 
   IF v_estado = 'recibida' THEN
+    ROLLBACK;
     RAISE EXCEPTION 'La orden % ya fue recibida', p_id_orden;
   END IF;
 
@@ -144,16 +142,12 @@ BEGIN
   UPDATE OrdenCompra SET estado = 'recibida' WHERE id_orden = p_id_orden;
 
   COMMIT;
-EXCEPTION
-  WHEN OTHERS THEN
-    ROLLBACK;
-    RAISE;
 END;
 $$;
 
 
 -- SP 4: Cancelar orden de compra pendiente
--- PROCEDURE con transacción explícita y ROLLBACK
+-- PROCEDURE con transacción explícita: ROLLBACK si no está pendiente, COMMIT si ok
 CREATE OR REPLACE PROCEDURE sp_cancelar_orden(IN p_id_orden INTEGER)
 LANGUAGE plpgsql AS $$
 DECLARE
@@ -162,10 +156,12 @@ BEGIN
   SELECT estado INTO v_estado FROM OrdenCompra WHERE id_orden = p_id_orden;
 
   IF NOT FOUND THEN
+    ROLLBACK;
     RAISE EXCEPTION 'Orden de compra % no encontrada', p_id_orden;
   END IF;
 
   IF v_estado != 'pendiente' THEN
+    ROLLBACK;
     RAISE EXCEPTION 'Solo se pueden cancelar órdenes pendientes (estado actual: %)', v_estado;
   END IF;
 
@@ -173,10 +169,6 @@ BEGIN
   DELETE FROM OrdenCompra  WHERE id_orden = p_id_orden;
 
   COMMIT;
-EXCEPTION
-  WHEN OTHERS THEN
-    ROLLBACK;
-    RAISE;
 END;
 $$;
 
@@ -210,8 +202,9 @@ END;
 $$;
 
 
+-- ============================================================
 -- Permisos de ejecución sobre los stored procedures
-
+-- ============================================================
 GRANT EXECUTE ON PROCEDURE sp_registrar_venta(INTEGER, INTEGER, JSONB)
   TO rol_admin, rol_vendedor, rol_cliente;
 GRANT EXECUTE ON PROCEDURE sp_cancelar_venta(INTEGER)

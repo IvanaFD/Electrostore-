@@ -79,72 +79,29 @@ export const create = async (rol, id_proveedor, id_empleado, items) => {
   }
 };
 
+// Recibe una orden invocando el stored procedure sp_recibir_orden
 export const recibirOrden = async (rol, id_orden) => {
-  const dbRole = DB_ROLE_MAP[rol];
-  const client = await pool.connect();
-  try {
-    if (dbRole) {
-      await client.query(`SET ROLE ${dbRole}`);
-      await client.query(`SET search_path TO public`);
-    }
-    await client.query('BEGIN');
-
-    const orden = await client.query('SELECT * FROM OrdenCompra WHERE id_orden = $1', [id_orden]);
-    if (!orden.rows[0]) throw new Error('Orden no encontrada');
-    if (orden.rows[0].estado === 'recibida') throw new Error('La orden ya fue recibida');
-
-    const detalle = await client.query('SELECT * FROM DetalleOrden WHERE id_orden = $1', [id_orden]);
-
-    for (const item of detalle.rows) {
-      await client.query(`
-        UPDATE Producto SET stock_actual = stock_actual + $1
-        WHERE id_producto = $2
-      `, [item.cantidad, item.id_producto]);
-    }
-
-    const result = await client.query(`
-      UPDATE OrdenCompra SET estado = 'recibida'
-      WHERE id_orden = $1
-      RETURNING *
-    `, [id_orden]);
-
-    await client.query('COMMIT');
-    return result.rows[0];
-  } catch (err) {
-    await client.query('ROLLBACK');
-    throw err;
-  } finally {
-    await client.query('RESET ROLE').catch(() => {});
-    client.release();
-  }
+  await pool.query('CALL sp_recibir_orden($1)', [id_orden]);
+  const result = await pool.query(`
+    SELECT o.*,
+      p.nombre AS proveedor,
+      e.nombre || ' ' || e.apellido AS empleado
+    FROM OrdenCompra o
+    JOIN Proveedor p ON o.id_proveedor = p.id_proveedor
+    JOIN Empleado e ON o.id_empleado = e.id_empleado
+    WHERE o.id_orden = $1
+  `, [id_orden]);
+  return result.rows[0];
 };
 
+// Cancela una orden invocando el stored procedure sp_cancelar_orden
 export const cancelarOrden = async (rol, id) => {
-  const dbRole = DB_ROLE_MAP[rol];
-  const client = await pool.connect();
-  try {
-    if (dbRole) {
-      await client.query(`SET ROLE ${dbRole}`);
-      await client.query(`SET search_path TO public`);
-    }
-    await client.query('BEGIN');
+  const orden = await pool.query(
+    'SELECT * FROM OrdenCompra WHERE id_orden = $1 AND estado = $2',
+    [id, 'pendiente']
+  );
+  if (!orden.rows[0]) return null;
 
-    const orden = await client.query(
-      'SELECT * FROM OrdenCompra WHERE id_orden = $1 AND estado = $2',
-      [id, 'pendiente']
-    );
-    if (!orden.rows[0]) return null;
-
-    await client.query('DELETE FROM DetalleOrden WHERE id_orden = $1', [id]);
-    await client.query('DELETE FROM OrdenCompra WHERE id_orden = $1', [id]);
-
-    await client.query('COMMIT');
-    return orden.rows[0];
-  } catch (err) {
-    await client.query('ROLLBACK');
-    throw err;
-  } finally {
-    await client.query('RESET ROLE').catch(() => {});
-    client.release();
-  }
+  await pool.query('CALL sp_cancelar_orden($1)', [id]);
+  return orden.rows[0];
 };

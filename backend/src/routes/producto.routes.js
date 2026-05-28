@@ -1,6 +1,7 @@
 import express from 'express';
 import * as repo from '../repositories/producto.repository.js';
 import { authMiddleware, roleGuard } from '../middlewares/auth.middleware.js';
+import { queryWithRole } from '../config/db.js';
 
 const router = express.Router();
 
@@ -12,6 +13,25 @@ router.get('/', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error al obtener productos' });
+  }
+});
+
+// GET /api/productos/:id/verificar-stock?cantidad=N
+router.get('/:id/verificar-stock', authMiddleware, async (req, res) => {
+  try {
+    const cantidad = parseInt(req.query.cantidad);
+    if (!cantidad || cantidad <= 0) {
+      return res.status(400).json({ error: 'Parámetro cantidad requerido y debe ser mayor a 0' });
+    }
+    const result = await queryWithRole(req.user.rol,
+      'SELECT * FROM sp_verificar_stock($1, $2)',
+      [req.params.id, cantidad]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    if (err.message?.includes('no encontrado')) return res.status(404).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Error al verificar stock' });
   }
 });
 
