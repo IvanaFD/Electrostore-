@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
+import sequelize from './src/config/sequelize.js';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -52,6 +53,10 @@ app.use('/api/categorias', categoriaRoutes);
 app.use('/api/reportes', reportRoutes);
 app.use('/api/empleados',  empleadoRoutes);
 app.use('/api/proveedores', proveedorRoutes);
+
+sequelize.authenticate()
+  .then(() => console.log('Sequelize: conexión ORM establecida'))
+  .catch((err) => console.error('Sequelize: error de conexión', err));
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);

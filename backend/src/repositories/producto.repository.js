@@ -1,5 +1,19 @@
-import { queryWithRole } from '../config/db.js';
+import { queryWithRole, DB_ROLE_MAP } from '../config/db.js';
+import sequelize from '../config/sequelize.js';
+import Producto from '../models/Producto.js';
 
+// Ejecuta una operación Sequelize dentro de una transacción con el rol correcto
+const withRole = async (rol, fn) => {
+  const dbRole = DB_ROLE_MAP[rol];
+  return await sequelize.transaction(async (t) => {
+    if (dbRole) {
+      await sequelize.query(`SET LOCAL ROLE ${dbRole}`, { transaction: t });
+    }
+    return await fn(t);
+  });
+};
+
+// GET todos los productos (con JOIN a categoria y proveedor — SQL explícito)
 export const getAll = async (rol) => {
   const result = await queryWithRole(rol, `
     SELECT p.*, c.nombre AS categoria, pr.nombre AS proveedor
@@ -11,6 +25,7 @@ export const getAll = async (rol) => {
   return result.rows;
 };
 
+// GET producto por id (con JOIN — SQL explícito)
 export const getById = async (rol, id) => {
   const result = await queryWithRole(rol, `
     SELECT p.*, c.nombre AS categoria, pr.nombre AS proveedor
@@ -22,11 +37,11 @@ export const getById = async (rol, id) => {
   return result.rows[0];
 };
 
-export const getBySku = async (rol, sku) => {
-  const result = await queryWithRole(rol, `SELECT * FROM Producto WHERE sku = $1`, [sku]);
-  return result.rows[0];
-};
+// GET producto por SKU — ORM (READ)
+export const getBySku = async (rol, sku) =>
+  withRole(rol, (t) => Producto.findOne({ where: { sku }, transaction: t }));
 
+// GET productos por categoria (con JOIN — SQL explícito)
 export const getByCategoria = async (rol, id_categoria) => {
   const result = await queryWithRole(rol, `
     SELECT p.*, c.nombre AS categoria, pr.nombre AS proveedor
@@ -39,6 +54,7 @@ export const getByCategoria = async (rol, id_categoria) => {
   return result.rows;
 };
 
+// GET productos con stock bajo (con JOIN — SQL explícito)
 export const getStockBajo = async (rol) => {
   const result = await queryWithRole(rol, `
     SELECT p.*, c.nombre AS categoria
@@ -50,28 +66,24 @@ export const getStockBajo = async (rol) => {
   return result.rows;
 };
 
-export const create = async (rol, { sku, nombre, marca, precio_venta, precio_costo, stock_actual, stock_minimo, descripcion, imagen_url, id_categoria, id_proveedor }) => {
-  const result = await queryWithRole(rol, `
-    INSERT INTO Producto (sku, nombre, marca, precio_venta, precio_costo, stock_actual, stock_minimo, descripcion, imagen_url, id_categoria, id_proveedor)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-    RETURNING *
-  `, [sku, nombre, marca, precio_venta, precio_costo, stock_actual, stock_minimo, descripcion, imagen_url, id_categoria, id_proveedor]);
-  return result.rows[0];
-};
+// POST crear producto — ORM (CREATE)
+export const create = async (rol, datos) =>
+  withRole(rol, (t) => Producto.create(datos, { transaction: t }));
 
-export const update = async (rol, id, { nombre, marca, precio_venta, precio_costo, stock_actual, stock_minimo, descripcion, imagen_url, id_categoria, id_proveedor }) => {
-  const result = await queryWithRole(rol, `
-    UPDATE Producto SET
-      nombre = $1, marca = $2, precio_venta = $3, precio_costo = $4,
-      stock_actual = $5, stock_minimo = $6, descripcion = $7,
-      imagen_url = $8, id_categoria = $9, id_proveedor = $10
-    WHERE id_producto = $11
-    RETURNING *
-  `, [nombre, marca, precio_venta, precio_costo, stock_actual, stock_minimo, descripcion, imagen_url, id_categoria, id_proveedor, id]);
-  return result.rows[0];
-};
+// PUT actualizar producto — ORM (UPDATE)
+export const update = async (rol, id, datos) =>
+  withRole(rol, async (t) => {
+    const producto = await Producto.findByPk(id, { transaction: t });
+    if (!producto) return null;
+    await producto.update(datos, { transaction: t });
+    return producto;
+  });
 
-export const remove = async (rol, id) => {
-  const result = await queryWithRole(rol, `DELETE FROM Producto WHERE id_producto = $1 RETURNING *`, [id]);
-  return result.rows[0];
-};
+// DELETE eliminar producto — ORM (DELETE)
+export const remove = async (rol, id) =>
+  withRole(rol, async (t) => {
+    const producto = await Producto.findByPk(id, { transaction: t });
+    if (!producto) return null;
+    await producto.destroy({ transaction: t });
+    return producto;
+  });
