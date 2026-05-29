@@ -1,11 +1,13 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Eye, Check, X } from 'lucide-react'
 import api from '@/services/api'
+import { useAuth } from '@/contexts/AuthContext'
 
 const formatDate = (f) => new Date(f).toLocaleDateString('es-GT', { day: '2-digit', month: '2-digit', year: 'numeric' })
 const NUEVA_ORDEN = { id_proveedor: '', id_empleado: '', items: [{ id_producto: '', cantidad: 1, precio_compra: '' }] }
 
 export default function OrdenesPage() {
+    const { user, isAdmin } = useAuth()
     const [ordenes, setOrdenes] = useState([])
     const [proveedores, setProveedores] = useState([])
     const [empleados, setEmpleados] = useState([])
@@ -36,6 +38,11 @@ export default function OrdenesPage() {
     }, [])
 
     useEffect(() => { cargar() }, [cargar])
+
+    const empleadoActual = useMemo(
+        () => empleados.find(e => e.id_usuario === user?.id_usuario),
+        [empleados, user]
+    )
 
     const ordenesFiltradas = useMemo(() => {
         let list = ordenes
@@ -122,7 +129,7 @@ export default function OrdenesPage() {
 
             <div className="page-header">
                 <div><h1>Órdenes de Compra</h1><p>{ordenesFiltradas.length} órdenes</p></div>
-                <button className="btn btn-primary" onClick={() => { setErrorNueva(''); setNueva(NUEVA_ORDEN); setShowNueva(true) }}>+ Nueva Orden</button>
+                <button className="btn btn-primary" onClick={() => { setErrorNueva(''); setNueva({ ...NUEVA_ORDEN, id_empleado: empleadoActual?.id_empleado || '' }); setShowNueva(true) }}>+ Nueva Orden</button>
             </div>
 
             <div className="filtros-bar">
@@ -205,10 +212,16 @@ export default function OrdenesPage() {
                             </div>
                             <div className="form-group">
                                 <label>Empleado</label>
-                                <select className="form-control" value={nueva.id_empleado} onChange={e => setNueva(p => ({ ...p, id_empleado: e.target.value }))}>
-                                    <option value="">Seleccionar empleado...</option>
-                                    {empleados.map(e => <option key={e.id_empleado} value={e.id_empleado}>{e.nombre} {e.apellido}</option>)}
-                                </select>
+                                {isAdmin ? (
+                                    <select className="form-control" value={nueva.id_empleado} onChange={e => setNueva(p => ({ ...p, id_empleado: e.target.value }))}>
+                                        <option value="">Seleccionar empleado...</option>
+                                        {empleados.map(e => <option key={e.id_empleado} value={e.id_empleado}>{e.nombre} {e.apellido}</option>)}
+                                    </select>
+                                ) : (
+                                    <input className="form-control" value={
+                                        empleadoActual ? `${empleadoActual.nombre} ${empleadoActual.apellido}` : 'Sin empleado asignado'
+                                    } disabled />
+                                )}
                             </div>
                             <div className="items-section">
                                 <div className="items-header">

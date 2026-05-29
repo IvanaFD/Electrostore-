@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Eye, Pencil, Trash2 } from 'lucide-react'
 import api from '@/services/api'
+import { useAuth } from '@/contexts/AuthContext'
 import '@/styles/inventario.css'
 
 const FORM_VACIO = {
@@ -16,6 +17,11 @@ const getStockClass = (p) => {
 }
 
 export default function InventarioPage() {
+    const { isAdmin, isBodeguero } = useAuth()
+    const canCreate = isAdmin || isBodeguero
+    const canEdit   = isAdmin || isBodeguero
+    const canDelete = isAdmin
+
     const [productos, setProductos] = useState([])
     const [categorias, setCategorias] = useState([])
     const [proveedores, setProveedores] = useState([])
@@ -141,7 +147,9 @@ export default function InventarioPage() {
                     <h1>Inventario</h1>
                     <p>{productosFiltrados.length} productos</p>
                 </div>
-                <button className="btn btn-primary" onClick={() => abrirModal()}>+ Nuevo Producto</button>
+                {canCreate && (
+                    <button className="btn btn-primary" onClick={() => abrirModal()}>+ Nuevo Producto</button>
+                )}
             </div>
 
             <div className="filtros-bar">
@@ -198,12 +206,16 @@ export default function InventarioPage() {
                                         <button className="btn-icon" title="Ver" onClick={() => { setProductoVer(p); setShowVer(true) }}>
                                             <Eye size={15} />
                                         </button>
-                                        <button className="btn-icon" title="Editar" onClick={() => abrirModal(p)}>
-                                            <Pencil size={15} />
-                                        </button>
-                                        <button className="btn-icon danger" title="Eliminar" onClick={() => eliminar(p)}>
-                                            <Trash2 size={15} />
-                                        </button>
+                                        {canEdit && (
+                                            <button className="btn-icon" title="Editar" onClick={() => abrirModal(p)}>
+                                                <Pencil size={15} />
+                                            </button>
+                                        )}
+                                        {canDelete && (
+                                            <button className="btn-icon danger" title="Eliminar" onClick={() => eliminar(p)}>
+                                                <Trash2 size={15} />
+                                            </button>
+                                        )}
                                     </div>
                                 </td>
                             </tr>

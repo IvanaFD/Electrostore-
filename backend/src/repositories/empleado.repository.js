@@ -5,7 +5,7 @@ export const getAll = async (rol) => {
     SELECT e.*, u.username, u.rol
     FROM Empleado e
     LEFT JOIN Usuario u ON e.id_usuario = u.id_usuario
-    ORDER BY e.nombre
+    ORDER BY e.id_empleado
   `);
   return result.rows;
 };
